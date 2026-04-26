@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V21.0 - REPARACIÓN QUIRÚRGICA</title>
+    <title>SISTEMA ISALIFER V22.0 - VERSIÓN FINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -155,10 +155,10 @@
             <div id="budget-manager-ui"></div>
         </section>
 
-        <!-- VISTA REGISTRO -->
+        <!-- VISTA AGREGAR -->
         <section id="v-load" class="view hidden">
             <div class="card">
-                <div class="card-title">➕ Registro de Operación</div>
+                <div class="card-title">➕ AGREGAR</div>
                 <div style="display:flex; gap:6px; margin-bottom:1.5rem; background:#F1F5F9; padding:6px; border-radius:18px;">
                     <button class="nav-item active" style="flex:1;" onclick="setT('gastovariable',this)">Variable</button>
                     <button class="nav-item" style="flex:1;" onclick="setT('gastofijo',this)">Fijo</button>
@@ -171,10 +171,10 @@
             </div>
         </section>
 
-        <!-- VISTA TARJETAS CRÉDITO -->
+        <!-- VISTA TC -->
         <section id="v-cc" class="view hidden">
             <div class="card" style="border: 2.5px solid #8B5CF6;">
-                <div class="card-title" style="color:#8B5CF6;">⚡ Nueva Carga a Tarjeta (Diferido)</div>
+                <div class="card-title" style="color:#8B5CF6;">⚡ TC</div>
                 <input type="number" id="cc-monto" class="input" placeholder="Monto S/" style="font-size:1.8rem; font-weight:900;">
                 <select id="cc-tarjeta" class="select"></select>
                 <input type="text" id="cc-concepto" class="input" placeholder="Concepto">
@@ -217,11 +217,11 @@
             <div class="card"><div class="card-title">📅 Timeline Maestro Gantt (1-31)</div><div id="gantt-ui"></div></div>
         </section>
 
-        <!-- VISTA RESERVAS Y WISHLIST -->
+        <!-- VISTA COMPRAS -->
         <section id="v-save" class="view hidden">
-            <h2 style="font-weight:900; margin-bottom:1rem; color:#8B5CF6; padding-left:10px;">🛡️ RESERVAS Y OBJETIVOS</h2>
+            <h2 style="font-weight:900; margin-bottom:1rem; color:#8B5CF6; padding-left:10px;">🛡️ COMPRAS</h2>
             <div id="savings-ui"></div>
-            <div class="card" style="border: 2.5px dashed #8B5CF6; margin-top:2rem;">
+            <div class="card" style="border: 2.5 dashed #8B5CF6; margin-top:2rem;">
                 <div class="card-title">🛍️ Wishlist ISALIFER</div>
                 <input type="text" id="f-item" class="input" placeholder="Item deseado">
                 <div style="display:flex; gap:10px;">
@@ -255,12 +255,12 @@
     <!-- NAVEGACIÓN INFERIOR -->
     <nav class="nav hidden" id="ui-nav">
         <button class="nav-item active" onclick="nav('v-dash',this)">Dash</button>
-        <button class="nav-item" onclick="nav('v-load',this)">Cargar</button>
-        <button class="nav-item" onclick="nav('v-cc',this)">CR</button>
+        <button class="nav-item" onclick="nav('v-load',this)">AGREGAR</button>
+        <button class="nav-item" onclick="nav('v-cc',this)">TC</button>
         <button class="nav-item" onclick="nav('v-cred',this)">Deudas</button>
         <button class="nav-item" onclick="nav('v-reports',this)">Reportes</button>
         <button class="nav-item" onclick="nav('v-budget',this)">Presup.</button>
-        <button class="nav-item" onclick="nav('v-save',this)">Ahorros</button>
+        <button class="nav-item" onclick="nav('v-save',this)">COMPRAS</button>
         <button class="nav-item" onclick="nav('v-hist',this)">Log</button>
     </nav>
 
@@ -486,7 +486,21 @@
         document.getElementById('h-body').innerHTML = f.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.categoria.substring(0,20)}...</td><td style="text-align:right; color:${t.tipo==='ingreso'?'var(--emerald)':'var(--danger)'}">S/ ${parseFloat(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="editTx('${t.id}')">✏️</button><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
     }
 
-    async function editTx(id) { const t = txs.find(x => x.id === id); const nM = prompt("Editar Monto S/:", t.monto); if (nM === null) return; await sb.from('transactions').update({ monto: parseFloat(nM) }).eq('id', id); sync(); }
+    async function editTx(id) { 
+        const t = txs.find(x => x.id === id); 
+        const nM = prompt("Editar Monto S/:", t.monto); 
+        if (nM === null) return;
+        const nC = prompt("Editar Categoría:", t.categoria);
+        if (nC === null) return;
+        
+        let nT = 'gastovariable';
+        if (MASTER_CATS.ingreso.includes(nC)) nT = 'ingreso';
+        else if (MASTER_CATS.gastofijo.includes(nC)) nT = 'gastofijo';
+        
+        await sb.from('transactions').update({ monto: parseFloat(nM), categoria: nC, tipo: nT }).eq('id', id); 
+        await sync(); 
+    }
+    
     async function deleteTx(id) { if(confirm("¿Eliminar transacción?")) { await sb.from('transactions').delete().eq('id', id); sync(); } }
 
     function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let days = ""; for(let i=1; i<=31; i++) { let st = i <= d.dia_cierre ? "background:var(--billing-cycle);" : "background:var(--safe-zone);"; if(i === d.dia_pago) st = "background:var(--danger); border-radius:50%; scale:0.7;"; days += `<div class="gantt-day" style="${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:800; margin-top:10px;">${d.banco_marca}</div><div class="gantt-master">${days}</div>`; }).join(''); }
