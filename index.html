@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V22.0 - VERSIÓN FINAL</title>
+    <title>SISTEMA ISALIFER V23.5 - LOGIN PRO Y EDICIÓN TOTAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -67,7 +67,7 @@
             <p style="font-size:3.5rem;">💜</p>
             <h1 style="font-weight:900; font-size:2.2rem; margin-bottom:2rem;">SISTEMA <span style="color:#8B5CF6;">ISALIFER</span></h1>
             <input type="email" id="log-email" class="input" placeholder="acceso@isalifer.top">
-            <input type="password" id="log-pass" class="input" placeholder="••••••••">
+            <input type="password" id="log-pass" class="input" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleLogin()">
             <button class="btn-main" onclick="handleLogin()">ACCEDER AL BÚNKER</button>
         </div>
     </div>
@@ -167,6 +167,8 @@
                 <input type="number" id="in-monto" class="input" placeholder="0.00" style="font-size:2.8rem; font-weight:900; text-align:center; height:5.5rem; border:3px solid #8B5CF6;">
                 <select id="in-cat" class="select"></select>
                 <select id="in-acc" class="select"><option>Isaac</option><option>Lili</option></select>
+                <input type="date" id="in-fecha" class="input">
+                <input type="text" id="in-desc" class="input" placeholder="Descripción/Detalles">
                 <button class="btn-main" onclick="handleSave()">SINCRONIZAR ISALIFER</button>
             </div>
         </section>
@@ -313,10 +315,22 @@
         ].sort()
     };
 
+    sb.auth.onAuthStateChange((event, session) => {
+        if (session) {
+            user = session.user;
+            initUI();
+        } else {
+            document.getElementById('login-screen').classList.remove('hidden');
+            ['ui-header','ui-main','ui-nav'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        }
+    });
+
     async function handleLogin() {
-        const { data, error } = await sb.auth.signInWithPassword({ email: document.getElementById('log-email').value, password: document.getElementById('log-pass').value });
-        if (error) return alert(error.message);
-        user = data.user; initUI();
+        const { data, error } = await sb.auth.signInWithPassword({ 
+            email: document.getElementById('log-email').value, 
+            password: document.getElementById('log-pass').value 
+        });
+        if (error) alert(error.message);
     }
 
     function initUI() {
@@ -326,6 +340,10 @@
         setT('gastovariable', null);
         const slct = document.getElementById('b-cat');
         if(slct) slct.innerHTML = [...MASTER_CATS.gastovariable, ...MASTER_CATS.gastofijo].sort().map(c => `<option>${c}</option>`).join('');
+        
+        const fInput = document.getElementById('in-fecha');
+        if(fInput) fInput.value = new Date().toISOString().split('T')[0];
+        
         sync();
     }
 
@@ -385,14 +403,23 @@
     }
 
     async function handleSave() {
-        const m = parseFloat(document.getElementById('in-monto').value), c = document.getElementById('in-cat').value, acc = document.getElementById('in-acc').value;
+        const m = parseFloat(document.getElementById('in-monto').value), 
+              c = document.getElementById('in-cat').value, 
+              acc = document.getElementById('in-acc').value,
+              fecha = document.getElementById('in-fecha').value || new Date().toISOString().split('T')[0],
+              desc = document.getElementById('in-desc').value;
+              
         const t = MASTER_CATS.ingreso.includes(c) ? 'ingreso' : (MASTER_CATS.gastofijo.includes(c) ? 'gastofijo' : 'gastovariable');
-        const p = { monto: m, categoria: c, tipo: t, cuenta_usuario_id: user.id, account: acc, date: new Date().toISOString().split('T')[0] };
+        const p = { monto: m, categoria: c, tipo: t, cuenta_usuario_id: user.id, account: acc, date: fecha, descripcion: desc };
+        
         if(c === "🛒 Diario Casa (alimentos, casa base)" && acc === "Isaac") {
             const mir = { ...p, tipo:'ingreso', account:'Lili', categoria:'🏠 Aporte Diario Casa', cuenta_usuario_id:'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' };
             await sb.from('transactions').insert([p, mir]);
         } else { await sb.from('transactions').insert([p]); }
+        
         sync(); alert("ISALIFER Sincronizado");
+        document.getElementById('in-monto').value = "";
+        document.getElementById('in-desc').value = "";
     }
 
     async function savePriorityPurchase() { 
@@ -426,7 +453,7 @@
         input.onchange = e => {
             const file = e.target.files[0];
             Papa.parse(file, { header: true, skipEmptyLines: true, complete: async (results) => {
-                const data = results.data.map(row => ({ date: row.Fecha || new Date().toISOString().split('T')[0], categoria: row.Categoria || '📦 Otros gastos variables', monto: parseFloat(row.Monto) || 0, tipo: row.Tipo || 'gastovariable', account: row.Cuenta || (user.email.includes('lilibeth') ? 'Lili' : 'Isaac'), cuenta_usuario_id: user.id }));
+                const data = results.data.map(row => ({ date: row.Fecha || new Date().toISOString().split('T')[0], categoria: row.Categoria || '📦 Otros gastos variables', monto: parseFloat(row.Monto) || 0, tipo: row.Tipo || 'gastovariable', account: row.Cuenta || (user.email.includes('lilibeth') ? 'Lili' : 'Isaac'), cuenta_usuario_id: user.id, descripcion: row.Descripcion || '' }));
                 const { error } = await sb.from('transactions').insert(data); if (error) alert("Error: " + error.message); else { alert("Importación Exitosa"); sync(); }
             }});
         };
@@ -481,9 +508,9 @@
 
     function renderH(fT) {
         const q = document.getElementById('h-search').value.toLowerCase();
-        let f = (fT || txs).filter(t => t.categoria.toLowerCase().includes(q));
+        let f = (fT || txs).filter(t => t.categoria.toLowerCase().includes(q) || (t.descripcion && t.descripcion.toLowerCase().includes(q)));
         f.sort((a,b) => (a[hSort.k] < b[hSort.k] ? -1 : 1) * hSort.d);
-        document.getElementById('h-body').innerHTML = f.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.categoria.substring(0,20)}...</td><td style="text-align:right; color:${t.tipo==='ingreso'?'var(--emerald)':'var(--danger)'}">S/ ${parseFloat(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="editTx('${t.id}')">✏️</button><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
+        document.getElementById('h-body').innerHTML = f.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.categoria.substring(0,18)}<br><small style="color:#64748b">${t.descripcion || ''}</small></td><td style="text-align:right; color:${t.tipo==='ingreso'?'var(--emerald)':'var(--danger)'}">S/ ${parseFloat(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="editTx('${t.id}')">✏️</button><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
     }
 
     async function editTx(id) { 
@@ -492,12 +519,22 @@
         if (nM === null) return;
         const nC = prompt("Editar Categoría:", t.categoria);
         if (nC === null) return;
+        const nD = prompt("Editar Descripción:", t.descripcion || "");
+        if (nD === null) return;
+        const nF = prompt("Editar Fecha (YYYY-MM-DD):", t.date);
+        if (nF === null) return;
         
         let nT = 'gastovariable';
         if (MASTER_CATS.ingreso.includes(nC)) nT = 'ingreso';
         else if (MASTER_CATS.gastofijo.includes(nC)) nT = 'gastofijo';
         
-        await sb.from('transactions').update({ monto: parseFloat(nM), categoria: nC, tipo: nT }).eq('id', id); 
+        await sb.from('transactions').update({ 
+            monto: parseFloat(nM), 
+            categoria: nC, 
+            tipo: nT, 
+            descripcion: nD,
+            date: nF
+        }).eq('id', id); 
         await sync(); 
     }
     
@@ -527,9 +564,9 @@
     function nav(id, el) { document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); }
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
-    function handleLogout() { sb.auth.signOut(); location.reload(); }
+    async function handleLogout() { await sb.auth.signOut(); }
     function sortH(k) { hSort.k=k; hSort.d*=-1; sync(); }
     function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value); const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; const n = parseInt(document.getElementById('calc-cuotas').value); const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,n))/(Math.pow(1+tem,n)-1); document.getElementById('calc-res').innerHTML = `CUOTA MENSUAL ESTIMADA: S/ ${c.toFixed(2)}`; }
 </script>
 </body>
-</html>
+</html>    
