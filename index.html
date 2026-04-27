@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V34.1 - TOTAL RESTORATION (FINAL Tweak)</title>
+    <title>SISTEMA ISALIFER V34.2 - AJUSTE QUIRÚRGICO</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -101,7 +101,7 @@
             <div class="card" style="background:#8B5CF6; color:#fff; border:none; box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);">
                 <div class="card-title" style="color:#fff; opacity:0.85;">💵 SALDO DE SUPERVIVENCIA</div>
                 <div id="ui-survival" style="font-size:3.2rem; font-weight:900; color:#fff;">S/ 0.00</div>
-                <p style="font-size:0.65rem; color:#fff; opacity:0.8; margin-top:8px;">Saldo Familiar Unificado.</p>
+                <p style="font-size:0.65rem; color:#fff; opacity:0.8; margin-top:8px;">Saldo Familiar Unificado (Excluye Internos).</p>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                 <div class="card"><div class="card-title">🔍 Fuga Variable</div><div style="height:150px;"><canvas id="pieChart"></canvas></div></div>
@@ -115,12 +115,12 @@
         <section id="v-casa" class="view hidden">
             <div class="card" style="border:3px solid #DB2777; background:#FFF1F2;">
                 <div class="card-title" style="color:#DB2777;">🏠 GESTIÓN DIARIO CASA</div>
-                <p style="font-size:0.75rem; color:#DB2777; font-weight:700; margin-bottom:1.5rem; line-height:1.4;">Acá podrás registrar los gastos que haces de manera personal o para la casa para que lleves un control de tus propios gastos.</p>
+                <p style="font-size:0.75rem; color:#DB2777; font-weight:700; margin-bottom:1.5rem; line-height:1.4;">Control de gastos del hogar y aportes internos.</p>
                 <div>
                     <p style="font-size:0.6rem; font-weight:900; color:#DB2777; opacity:0.7;">SALDO ACTUAL DISPONIBLE</p>
                     <h2 id="casa-saldo" style="font-size:2.8rem; font-weight:900; color:#DB2777;">S/ 0.00</h2>
                 </div>
-                <div class="card-title" style="font-size:0.6rem; color:#DB2777; margin-top:1.5rem; margin-bottom:0.8rem;">REGISTRAR GASTO</div>
+                <div class="card-title" style="font-size:0.6rem; color:#DB2777; margin-top:1.5rem; margin-bottom:0.8rem;">REGISTRAR MOVIMIENTO</div>
                 <input type="number" id="ca-monto" class="input" placeholder="Monto S/" style="height:3rem;">
                 <input type="text" id="ca-desc" class="input" placeholder="Descripción" style="height:3rem;">
                 <button class="btn-main" style="background:#DB2777;" onclick="saveGastoCasa()">REGISTRAR</button>
@@ -164,7 +164,7 @@
                 <input type="date" id="cc-fecha" class="input">
                 <button class="btn-main" style="background:#8B5CF6;" onclick="saveCCPurchase()">PROGRAMAR CARGO</button>
             </div>
-            <div class="card"><div class="card-title">🔍 Agenda de Pagos Estimados</div><div id="cc-history-ui"></div></div>
+            <div id="cc-history-ui"></div>
         </section>
 
         <!-- DEUDAS -->
@@ -176,31 +176,16 @@
                     <input type="number" id="d-tea" class="input" placeholder="TEA %">
                     <input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/">
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <input type="number" id="d-cierre" class="input" placeholder="Día Cierre">
-                    <input type="number" id="d-pago" class="input" placeholder="Día Pago">
-                </div>
                 <button class="btn-main" onclick="saveDebt()">VINCULAR DEUDA</button>
             </div>
             <div id="debt-ranking-ui"></div>
-            <div class="card"><div class="card-title">📅 Timeline Maestro Gantt (1-31)</div><div id="gantt-ui"></div></div>
+            <div class="card"><div class="card-title">📅 Gantt Maestro (1-31)</div><div id="gantt-ui"></div></div>
         </section>
 
         <!-- REPORTES -->
         <section id="v-reports" class="view hidden">
             <div class="card"><div class="card-title">📈 Balance Mensual Familiar (Triple Barra)</div><div style="height:320px;"><canvas id="repBalanceChart"></canvas></div></div>
             <div class="card"><div class="card-title">📊 Margen Neto</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div>
-        </section>
-
-        <!-- PRESUPUESTOS -->
-        <section id="v-budget" class="view hidden">
-            <div class="card" style="border: 2.5px solid var(--accent);">
-                <div class="card-title">🎯 Establecer Límite</div>
-                <select id="b-cat" class="select"></select>
-                <input type="number" id="b-limite" class="input" placeholder="Monto Límite S/">
-                <button class="btn-main" style="background:var(--accent);" onclick="saveBudgetRemote()">ESTABLECER</button>
-            </div>
-            <div id="budget-manager-ui"></div>
         </section>
 
         <!-- LOG -->
@@ -235,7 +220,6 @@
         <button class="nav-item" onclick="nav('v-cc',this)">TC</button>
         <button class="nav-item" onclick="nav('v-cred',this)">Deudas</button>
         <button class="nav-item" onclick="nav('v-reports',this)">Reportes</button>
-        <button class="nav-item" onclick="nav('v-budget',this)">Presup.</button>
         <button class="nav-item" onclick="nav('v-hist',this)">Log</button>
     </nav>
 
@@ -275,7 +259,6 @@
         ['ui-header','ui-main','ui-nav'].forEach(id => document.getElementById(id).classList.remove('hidden'));
         document.getElementById('user-tag').textContent = user.email.includes('lilibeth') ? "LILI" : "ISAAC";
         setT('gastovariable', null);
-        const bSlct = document.getElementById('b-cat'); if(bSlct) bSlct.innerHTML = [...MASTER_CATS.gastofijo, ...MASTER_CATS.gastovariable].sort().map(c => `<option>${c}</option>`).join('');
         sync();
     }
 
@@ -293,7 +276,9 @@
         const range = { start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], end: new Date(new Date().getFullYear(), new Date().getMonth(), 31).toISOString().split('T')[0] }; 
         if(document.getElementById('time-filter').value === 'all') { range.start = "2020-01-01"; range.end = "2030-12-31"; }
 
-        const fT = txs.filter(t => t.date >= range.start && t.date <= range.end && t.tipo !== 'interno');
+        // AJUSTE V34.2 EXCLUSIÓN ABSOLUTA
+        const fT = txs.filter(t => t.date >= range.start && t.date <= range.end && t.tipo !== 'interno' && t.categoria !== '🏠 Aporte Diario Casa');
+        
         let tI = 0, tF = 0, tV = 0; const sums = { ing: {}, fix: {}, var: {} };
         fT.forEach(t => {
             const v = Math.abs(parseFloat(t.monto));
@@ -304,7 +289,6 @@
 
         document.getElementById('ui-survival').textContent = `S/ ${(tI - tF - tV).toLocaleString('en-US',{minimumFractionDigits:2})}`;
         
-        // REPO DETALLADO DASHBOARD
         let sHtml = ""; 
         [['ing','INGRESOS', tI, 'var(--emerald)'],['fix','EGRESOS FIJOS', tF, 'var(--accent)'],['var','EGRESOS VARIABLES', tV, 'var(--danger)']].forEach(([k,l,val,clr]) => {
             if(val > 0) {
@@ -321,12 +305,46 @@
         document.getElementById('casa-saldo').textContent = `S/ ${(apor - gast).toLocaleString('en-US',{minimumFractionDigits:2})}`;
         document.getElementById('casa-log-body').innerHTML = casaT.map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.descripcion || t.categoria}</td><td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
 
-        // SIMULADOR TÁCTICO V34.1
+        // SIMULADOR
         const sim = document.getElementById('calc-tarjeta');
         if(sim) sim.innerHTML = debts.map(d => `<option value="${d.tea}">${d.banco_marca}</option>`).join('');
 
         renderCharts(fT); renderD(); renderG(); renderCCHistory(); renderBudgets(fT); renderH();
     }
+
+    function renderCharts(fT) { 
+        const ctxP = document.getElementById('pieChart').getContext('2d'); if(pChart) pChart.destroy(); const pD = {}; fT.filter(t => t.tipo === 'gastovariable').forEach(t => { const c = t.categoria.substring(0,8); pD[c] = (pD[c] || 0) + Math.abs(parseFloat(t.monto)); }); 
+        pChart = new Chart(ctxP, { type:'doughnut', data:{ labels:Object.keys(pD), datasets:[{data:Object.values(pD), backgroundColor:['#8B5CF6','#EF4444','#10B981','#F59E0B']}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}}); 
+        const ctxB = document.getElementById('burnChart').getContext('2d'); if(bChart) bChart.destroy(); const dI = [0,0,0,0,0,0,0], dL = [0,0,0,0,0,0,0]; fT.filter(t => t.tipo === 'gastovariable').slice(0,30).forEach(t => { const d = new Date(t.date).getDay(); const idx = d === 0 ? 6 : d - 1; if(t.account === 'Isaac') dI[idx]+=Math.abs(parseFloat(t.monto)); else dL[idx]+=Math.abs(parseFloat(t.monto)); }); 
+        bChart = new Chart(ctxB, { type:'bar', data:{ labels:['L','M','M','J','V','S','D'], datasets:[{label:'Isaac',data:dI,backgroundColor:'#8B5CF6'},{label:'Lili',data:dL,backgroundColor:'#DB2777'}] }, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true}},plugins:{legend:{display:false}}} }); 
+    }
+
+    function renderReports() {
+        if (!txs) return;
+        const curY = new Date().getFullYear(); const dM = {}; for(let i=0; i<12; i++) dM[`${curY}-${String(i+1).padStart(2,'0')}`] = { i:0, ef:0, ev:0 };
+        // AJUSTE V34.2 EXCLUSIÓN ABSOLUTA EN REPORTES
+        txs.filter(x => x.tipo !== 'interno' && x.categoria !== '🏠 Aporte Diario Casa').forEach(t => {
+            const m = t.date.substring(0,7);
+            if(dM[m]) { const v = Math.abs(t.monto); if(t.tipo === 'ingreso') dM[m].i += v; else if(t.tipo === 'gastofijo') dM[m].ef += v; else dM[m].ev += v; }
+        });
+        const lbs = Object.keys(dM).sort();
+        const ctxB = document.getElementById('repBalanceChart').getContext('2d'); if(rBalChart) rBalChart.destroy();
+        rBalChart = new Chart(ctxB, { type:'bar', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Ingresos',data:lbs.map(l=>dM[l].i),backgroundColor:'#10B981'},{label:'G.Var',data:lbs.map(l=>dM[l].ev),backgroundColor:'#DB2777'},{label:'G.Fijo',data:lbs.map(l=>dM[l].ef),backgroundColor:'#EF4444'}] }, options:{responsive:true,maintainAspectRatio:false}});
+        const ctxM = document.getElementById('repMarginChart').getContext('2d'); if(rMarChart) rMarChart.destroy();
+        rMarChart = new Chart(ctxM, { type:'line', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Utilidad',data:lbs.map(l=>dM[l].i-dM[l].ef-dM[l].ev),borderColor:'#8B5CF6',fill:true,backgroundColor:'rgba(139, 92, 246,0.1)'}] }, options:{responsive:true,maintainAspectRatio:false}});
+    }
+
+    function renderH() {
+        const q = document.getElementById('h-search').value.toLowerCase();
+        const t = document.getElementById('h-type').value;
+        let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t));
+        document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria}</td><td>${x.subcategoria || '-'}</td><td>${x.descripcion || ''}</td><td style="text-align:right; color:${x.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(x.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">🗑️</button></td></tr>`).join('');
+    }
+
+    function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let ds = ""; for(let i=1; i<=31; i++) { let st = i <= d.dia_cierre ? "background:var(--billing-cycle);" : "background:var(--safe-zone);"; if(i === d.dia_pago) st = "background:var(--danger); scale:0.8; border-radius:50%;"; ds += `<div style="flex:1; height:30px; border-right:1px solid rgba(0,0,0,0.05); ${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:900; margin-top:12px;">${d.banco_marca}</div><div class="gantt-master">${ds}</div>`; }).join(''); }
+    function renderD() { document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `<div class="card" style="border-left:5px solid ${d.tea > 80 ? 'var(--danger)':'var(--accent)'}"><div style="display:flex; justify-content:space-between;"><strong>${d.banco_marca}</strong><div style="text-align:right;">TEA: ${d.tea}%<br>Cuota: S/ ${d.cuota_mensual}</div></div></div>`).join(''); }
+    function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); const mX = b.monto_quincenal; const over = g > mX; return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${over?'⚠️ ':''}${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${mX}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/mX)*100,100)}%; background:${over?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
+    function renderCCHistory() { document.getElementById('cc-history-ui').innerHTML = ccData.map(c => `<div style="font-size:0.7rem; border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between;"><span>${c.concepto}</span><strong>S/ ${c.monto}</strong></div>`).join(''); }
 
     function updateSubCats() {
         const cat = document.getElementById('in-cat').value;
@@ -359,31 +377,6 @@
         sync();
     }
 
-    function renderReports() {
-        const curY = new Date().getFullYear(); const dM = {}; for(let i=0; i<12; i++) dM[`${curY}-${String(i+1).padStart(2,'0')}`] = { i:0, ef:0, ev:0 };
-        txs.filter(x => x.tipo !== 'interno').forEach(t => {
-            const m = t.date.substring(0,7);
-            if(dM[m]) { const v = Math.abs(t.monto); if(t.tipo === 'ingreso') dM[m].i += v; else if(t.tipo === 'gastofijo') dM[m].ef += v; else dM[m].ev += v; }
-        });
-        const lbs = Object.keys(dM).sort();
-        const ctxB = document.getElementById('repBalanceChart').getContext('2d'); if(rBalChart) rBalChart.destroy();
-        rBalChart = new Chart(ctxB, { type:'bar', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Ingresos',data:lbs.map(l=>dM[l].i),backgroundColor:'#10B981'},{label:'G.Var',data:lbs.map(l=>dM[l].ev),backgroundColor:'#DB2777'},{label:'G.Fijo',data:lbs.map(l=>dM[l].ef),backgroundColor:'#EF4444'}] }, options:{responsive:true,maintainAspectRatio:false}});
-        const ctxM = document.getElementById('repMarginChart').getContext('2d'); if(rMarChart) rMarChart.destroy();
-        rMarChart = new Chart(ctxM, { type:'line', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Utilidad',data:lbs.map(l=>dM[l].i-dM[l].ef-dM[l].ev),borderColor:'#8B5CF6',fill:true,backgroundColor:'rgba(139, 92, 246,0.1)'}] }, options:{responsive:true,maintainAspectRatio:false}});
-    }
-
-    function renderH() {
-        const q = document.getElementById('h-search').value.toLowerCase();
-        const t = document.getElementById('h-type').value;
-        let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t));
-        document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria}</td><td>${x.subcategoria || '-'}</td><td>${x.descripcion || ''}</td><td style="text-align:right; color:${x.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(x.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">🗑️</button></td></tr>`).join('');
-    }
-
-    function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let ds = ""; for(let i=1; i<=31; i++) { let st = i <= d.dia_cierre ? "background:var(--billing-cycle);" : "background:var(--safe-zone);"; if(i === d.dia_pago) st = "background:var(--danger); scale:0.8; border-radius:50%;"; ds += `<div style="flex:1; height:30px; border-right:1px solid rgba(0,0,0,0.05); ${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:900; margin-top:12px;">${d.banco_marca}</div><div class="gantt-master">${ds}</div>`; }).join(''); }
-    function renderD() { document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `<div class="card" style="border-left:5px solid ${d.tea > 80 ? 'var(--danger)':'var(--accent)'}"><div style="display:flex; justify-content:space-between;"><strong>${d.banco_marca}</strong><div style="text-align:right;">TEA: ${d.tea}%<br>Cuota: S/ ${d.cuota_mensual}</div></div></div>`).join(''); }
-    function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); const mX = b.monto_quincenal; const over = g > mX; return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${over?'⚠️ ':''}${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${mX}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/mX)*100,100)}%; background:${over?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
-    function renderCCHistory() { document.getElementById('cc-history-ui').innerHTML = ccData.map(c => `<div style="font-size:0.7rem; border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between;"><span>${c.concepto}</span><strong>S/ ${c.monto}</strong></div>`).join(''); }
-
     function runTacticalCalc() { 
         const m = parseFloat(document.getElementById('calc-monto').value);
         const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100;
@@ -395,9 +388,8 @@
     }
 
     function nav(id, el) { if(!el || !document.getElementById(id)) return; document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); }
-    async function saveDebt() { await sb.from('debts').insert([{ banco_marca: document.getElementById('d-banco').value, tea: parseFloat(document.getElementById('d-tea').value), cuota_mensual: parseFloat(document.getElementById('d-cuota').value), dia_cierre: parseInt(document.getElementById('d-cierre').value), dia_pago: parseInt(document.getElementById('d-pago').value), titular_id: user.id }]); sync(); }
-    async function saveCCPurchase() { await sb.from('card_consumptions').insert([{ monto: parseFloat(document.getElementById('cc-monto').value), concepto: document.getElementById('cc-concepto').value, tarjeta_id: document.getElementById('cc-tarjeta').value, fecha_pago_estimada: document.getElementById('cc-fecha').value, cuenta_usuario_id: user.id }]); sync(); }
-    async function saveBudgetRemote() { await sb.from('budgets').upsert({ categoria: document.getElementById('b-cat').value, monto_quincenal: parseFloat(document.getElementById('b-limite').value), usuario_id: user.id }, { onConflict: 'categoria,usuario_id' }); sync(); }
+    async function saveDebt() { await sb.from('debts').insert([{ banco_marca: document.getElementById('d-banco').value, tea: parseFloat(document.getElementById('d-tea').value), cuota_mensual: parseFloat(document.getElementById('d-cuota').value), titular_id: user.id }]); sync(); }
+    async function saveCCPurchase() { await sb.from('card_consumptions').insert([{ monto: parseFloat(document.getElementById('cc-monto').value), concepto: document.getElementById('cc-concepto').value, tarjeta_id: document.getElementById('cc-tarjeta').value, cuenta_usuario_id: user.id }]); sync(); }
     async function deleteTx(id) { if(confirm("¿Eliminar?")) { await sb.from('transactions').delete().eq('id', id); sync(); } }
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
