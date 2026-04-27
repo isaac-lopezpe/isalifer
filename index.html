@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V37.0 - ELITE NAVIGATION</title>
+    <title>SISTEMA ISALIFER V39.0 - POTENCIA HÍBRIDA</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,58 +18,41 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; color: var(--text); }
         
-        /* FIX V37: Zona de seguridad expandida */
-        body { background: var(--bg); padding-bottom: 140px; min-height: 100vh; overflow-x: hidden; }
+        /* BLINDAJE iOS V38/39 */
+        html, body { overscroll-behavior: none; position: fixed; width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+        #ui-main { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 160px; }
         
         .container { padding: 1.25rem; max-width: 680px; margin: 0 auto; }
         .hidden { display: none !important; }
         
         .header { position: sticky; top: 0; z-index: 200; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 2.5px solid var(--border); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
         
-        /* FIX V37: Navegación Elite 'Magnetic Scroll' & Glassmorphism */
+        /* NAVEGACIÓN HÍBRIDA V39 */
         .nav { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            background: rgba(0, 0, 0, 0.85); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
-            padding: 12px 25px; 
-            display: flex; 
-            gap: 12px; 
-            z-index: 500; 
-            justify-content: flex-start;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory; /* Efecto Magnético */
-            white-space: nowrap;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            /* Máscara de Desvanecimiento (Fading) */
-            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0, 0, 0, 0.88); 
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 20px)) 18px; 
+            display: flex; gap: 10px; z-index: 500; justify-content: flex-start;
+            overflow-x: auto; scroll-snap-type: x mandatory; white-space: nowrap; -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain; touch-action: pan-x; user-select: none; -webkit-user-select: none;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
         }
-        .nav::-webkit-scrollbar { display: none; }
-        
-        .nav-item { 
-            padding: 10px 18px; 
-            border-radius: 24px; 
-            color: #94A3B8; 
-            font-size: 0.65rem; 
-            font-weight: 800; 
-            cursor: pointer; 
-            border: none; 
-            background: transparent; 
-            transition: 0.3s; 
-            flex-shrink: 0;
-            scroll-snap-align: center; /* Snap al centro */
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .nav::-webkit-scrollbar { height: 2px; display: block; }
+        .nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        @media (min-width: 768px) {
+            .nav { 
+                left: 50%; transform: translateX(-50%); width: auto; max-width: 900px; 
+                justify-content: center; overflow-x: hidden; border-radius: 40px; 
+                bottom: 20px; padding: 12px 30px; mask-image: none; -webkit-mask-image: none;
+            }
+            .nav-item { scroll-snap-align: none; }
         }
-        .nav-item.active { background: var(--accent); color: #fff; transform: scale(1.05); }
-        
-        /* Highlight AGREGAR */
-        .nav-add { border: 1.5px solid var(--accent) !important; color: #fff !important; font-weight: 900 !important; font-size: 0.75rem !important; }
+
+        .nav-item { padding: 10px 15px; border-radius: 24px; color: #94A3B8; font-size: 0.62rem; font-weight: 800; cursor: pointer; border: none; background: transparent; transition: 0.3s; flex-shrink: 0; scroll-snap-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+        .nav-item.active { background: var(--accent); color: #fff; transform: scale(1.03); }
+        .nav-add { border: 1.5px solid var(--accent) !important; color: #fff !important; font-weight: 900 !important; font-size: 0.72rem !important; }
 
         .card { background: var(--card); border: 2.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); position: relative; }
         .card-title { font-size: 0.7rem; font-weight: 900; color: var(--border); text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.5px; }
@@ -85,20 +68,13 @@
         th { text-align: left; padding: 1rem 0.6rem; background: #F1F5F9; border-bottom: 2.5px solid var(--border); font-weight: 900; }
         td { padding: 0.8rem 0.6rem; border-bottom: 1px solid #F1F5F9; font-weight: 700; }
         
-        @media (max-width: 600px) {
-            table { font-size: 0.65rem; }
-            td, th { padding: 0.7rem 0.4rem; }
-            .card { padding: 1rem; }
-        }
-
         .budget-bar { height: 16px; background: #F1F5F9; border-radius: 10px; overflow: hidden; margin: 8px 0; border: 1.5px solid #e2e8f0; }
         .budget-fill { height: 100%; transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .gantt-master { display: flex; height: 30px; gap: 2px; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
         .sidebar { position: fixed; top: 0; right: 0; bottom: 0; width: 320px; background: #fff; z-index: 1000; transform: translateX(100%); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 2.5rem 1.5rem; border-left: 5px solid var(--border); overflow-y: auto; }
         .sidebar.open { transform: translateX(0); }
     </style>
 </head>
-<body>
+<body id="bunker-body">
 
     <!-- LOGIN -->
     <div id="login-screen" style="position: fixed; inset: 0; background: #fff; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 2rem;">
@@ -111,117 +87,56 @@
         </div>
     </div>
 
-    <!-- CABECERA -->
     <header class="header hidden" id="ui-header">
-        <div style="display:flex; flex-direction:column;">
-            <span style="font-weight:900; font-size:1.15rem;">SISTEMA <span id="user-tag" style="color:#8B5CF6;">ISALIFER</span></span>
-            <select id="time-filter" class="select" style="height:2rem; width:150px; font-size:0.65rem; margin:0; padding:0 8px; border:1.8px solid #334155;" onchange="sync()">
-                <option value="q-current">Quincena Actual</option>
-                <option value="m-current">Mes Actual</option>
-                <option value="m-last">Mes Pasado</option>
-                <option value="all">Historial Total</option>
-            </select>
-        </div>
+        <div style="display:flex; flex-direction:column;"><span style="font-weight:900; font-size:1.15rem;">SISTEMA <span id="user-tag" style="color:#8B5CF6;">ISALIFER</span></span><select id="time-filter" class="select" style="height:2rem; width:150px; font-size:0.65rem; margin:0; padding:0 8px; border:1.8px solid #334155;" onchange="sync()"><option value="q-current">Quincena Actual</option><option value="m-current">Mes Actual</option><option value="m-last">Mes Pasado</option><option value="all">Historial Total</option></select></div>
         <button onclick="toggleSidebar()" class="btn-icon">⚡</button>
     </header>
 
     <aside id="sb" class="sidebar">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-            <h2 style="font-weight:900; color:#8B5CF6; margin:0;">⚡ Toolbox</h2>
-            <button onclick="toggleSidebar()" class="btn-icon" style="border:none; background:transparent; font-size:1.5rem;">✖</button>
-        </div>
-        <div class="card" style="padding:1rem; border:2px solid #8B5CF6;">
-            <div class="card-title" style="font-size:0.6rem;">🛒 Simulador Táctico</div>
-            <input type="number" id="calc-monto" class="input" placeholder="Monto S/" style="height:3rem; margin-bottom:0.5rem;">
-            <select id="calc-tarjeta" class="select" style="height:3rem; margin-bottom:0.5rem;"></select>
-            <input type="number" id="calc-cuotas" class="input" placeholder="N° de Cuotas" style="height:3rem; margin-bottom:0.8rem;">
-            <button class="btn-main" style="height:3rem; background:#8B5CF6;" onclick="runTacticalCalc()">CALCULAR</button>
-            <div id="calc-res" style="margin-top:10px; font-weight:900; font-size:0.7rem; color:#EF4444; text-align:center;"></div>
-        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;"><h2 style="font-weight:900; color:#8B5CF6; margin:0;">⚡ Toolbox</h2><button onclick="toggleSidebar()" class="btn-icon" style="border:none; background:transparent; font-size:1.5rem;">✖</button></div>
+        <div class="card" style="padding:1rem; border:2px solid #8B5CF6;"><div class="card-title" style="font-size:0.6rem;">🛒 Simulador Táctico</div><input type="number" id="calc-monto" class="input" placeholder="Monto S/" style="height:3rem; margin-bottom:0.5rem;"><select id="calc-tarjeta" class="select" style="height:3rem; margin-bottom:0.5rem;"></select><input type="number" id="calc-cuotas" class="input" placeholder="N° de Cuotas" style="height:3rem; margin-bottom:0.8rem;"><button class="btn-main" style="height:3rem; background:#8B5CF6;" onclick="runTacticalCalc()">CALCULAR</button><div id="calc-res" style="margin-top:10px; font-weight:900; font-size:0.7rem; color:#EF4444; text-align:center;"></div></div>
+        <button class="btn-main" style="background:#F1F5F9; color:#334155 !important; border:2.5px solid var(--border); margin-bottom:1rem;" onclick="importCSV()">📂 IMPORTAR LOG (.CSV)</button>
         <button class="btn-main" style="background:#000; color:#fff;" onclick="handleLogout()">DESCONECTAR BÚNKER</button>
     </aside>
 
     <main class="container hidden" id="ui-main">
-        <!-- DASHBOARD -->
         <section id="v-dash" class="view">
-            <div class="card" style="background:#8B5CF6; color:#fff; border:none; box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);">
-                <div class="card-title" style="color:#fff; opacity:0.85;">💵 SALDO DE SUPERVIVENCIA</div>
-                <div id="ui-survival" style="font-size:3.2rem; font-weight:900; color:#fff;">S/ 0.00</div>
-                <p style="font-size:0.65rem; color:#fff; opacity:0.8; margin-top:8px;">Saldo Familiar Unificado.</p>
-            </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                <div class="card"><div class="card-title">🔍 Fuga Variable</div><div style="height:150px;"><canvas id="pieChart"></canvas></div></div>
-                <div class="card"><div class="card-title">📈 Burn Rate</div><div style="height:140px;"><canvas id="burnChart"></canvas></div></div>
-            </div>
+            <div class="card" style="background:#8B5CF6; color:#fff; border:none;"><div class="card-title" style="color:#fff; opacity:0.85;">💵 SALDO DE SUPERVIVENCIA</div><div id="ui-survival" style="font-size:3.2rem; font-weight:900; color:#fff;">S/ 0.00</div></div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;"><div class="card"><div class="card-title">🔍 Fuga Variable</div><div style="height:150px;"><canvas id="pieChart"></canvas></div></div><div class="card"><div class="card-title">📈 Burn Rate</div><div style="height:140px;"><canvas id="burnChart"></canvas></div></div></div>
             <div class="card"><div class="card-title">📊 Resumen por Categorías</div><div id="ui-summary-cats"></div></div>
         </section>
 
-        <!-- MÓDULO CASA -->
         <section id="v-casa" class="view hidden">
-            <div class="card" style="border:3px solid #DB2777; background:#FFF1F2;">
-                <div class="card-title" style="color:#DB2777;">🏠 GESTIÓN DIARIO CASA</div>
-                <div>
-                    <p style="font-size:0.6rem; font-weight:900; color:#DB2777; opacity:0.7;">SALDO ACTUAL DISPONIBLE</p>
-                    <h2 id="casa-saldo" style="font-size:2.8rem; font-weight:900; color:#DB2777;">S/ 0.00</h2>
-                </div>
-                <div class="card-title" style="font-size:0.6rem; color:#DB2777; margin-top:1.5rem; margin-bottom:0.8rem;">REGISTRAR GASTO</div>
-                <input type="number" id="ca-monto" class="input" placeholder="Monto S/" style="height:3rem;">
-                <input type="text" id="ca-desc" class="input" placeholder="Descripción" style="height:3rem;">
-                <button class="btn-main" style="background:#DB2777;" id="btn-save-casa" onclick="saveGastoCasa()">REGISTRAR</button>
-            </div>
-            <div class="card"><div class="card-title">📑 BITÁCORA CASA</div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>DESCRIPCIÓN</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead><tbody id="casa-log-body"></tbody></table></div></div>
+            <div class="card" style="border:3px solid #DB2777; background:#FFF1F2;"><div class="card-title" style="color:#DB2777;">🏠 DIARIO CASA</div><h2 id="casa-saldo" style="font-size:2.8rem; font-weight:900; color:#DB2777;">S/ 0.00</h2><input type="number" id="ca-monto" class="input" placeholder="Monto S/"><input type="text" id="ca-desc" class="input" placeholder="Descripción"><button class="btn-main" style="background:#DB2777;" id="btn-save-casa" onclick="saveGastoCasa()">REGISTRAR</button></div>
+            <div class="card"><div class="card-title">📑 BITÁCORA CASA</div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>DESC</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">X</th></tr></thead><tbody id="casa-log-body"></tbody></table></div></div>
         </section>
 
-        <!-- AGREGAR -->
+        <section id="v-budget" class="view hidden">
+            <div class="card" style="border:2.5px solid var(--accent);"><div class="card-title">🎯 ESTABLECER LÍMITE</div><select id="b-cat" class="select"></select><input type="number" id="b-monto" class="input" placeholder="Monto Quincenal S/"><button class="btn-main" onclick="saveBudgetRemote()">ASIGNAR PRESUPUESTO</button></div>
+            <div id="budget-manager-ui"></div>
+            <div class="card"><div class="card-title">📊 Monitor de Ejecución</div><div id="budget-ui"></div></div>
+        </section>
+
         <section id="v-load" class="view hidden">
             <div class="card">
                 <div class="card-title">➕ AGREGAR MOVIMIENTO</div>
-                <div style="display:flex; gap:6px; margin-bottom:1.5rem; background:#F1F5F9; padding:6px; border-radius:18px;">
-                    <button class="nav-item active" style="flex:1; scroll-snap-align:none; text-transform:none;" onclick="setT('gastovariable',this)">Variable</button>
-                    <button class="nav-item" style="flex:1; scroll-snap-align:none; text-transform:none;" onclick="setT('gastofijo',this)">Fijo</button>
-                    <button class="nav-item" style="flex:1; scroll-snap-align:none; text-transform:none;" onclick="setT('ingreso',this)">Ingreso</button>
-                </div>
-                <input type="number" id="in-monto" class="input" placeholder="0.00" style="font-size:3.2rem; font-weight:900; text-align:center; height:5.5rem; border:3px solid #8B5CF6;">
-                <label style="font-size:0.6rem; font-weight:800; margin-bottom:4px; display:block;">CATEGORÍA</label>
+                <div style="display:flex; gap:6px; margin-bottom:1.2rem; background:#F1F5F9; padding:6px; border-radius:18px;"><button class="nav-item active" style="flex:1; color:var(--text);" onclick="setT('gastovariable',this)">Variable</button><button class="nav-item" style="flex:1; color:var(--text);" onclick="setT('gastofijo',this)">Fijo</button><button class="nav-item" style="flex:1; color:var(--text);" onclick="setT('ingreso',this)">Ingreso</button></div>
+                <input type="number" id="in-monto" class="input" placeholder="0.00" style="font-size:3.2rem; font-weight:900; text-align:center; height:5rem; border:3px solid #8B5CF6;">
                 <select id="in-cat" class="select" onchange="updateSubCats()"></select>
-                <div id="subcat-wrap" class="hidden"><label style="font-size:0.6rem; font-weight:800; margin-bottom:4px; display:block;">SUBCATEGORÍA</label><div id="subcat-container"></div></div>
+                <div id="subcat-wrap" class="hidden"><div id="subcat-container"></div></div>
                 <select id="in-acc" class="select"><option>Isaac</option><option>Lili</option></select>
-                <input type="date" id="in-fecha" class="input">
-                <input type="text" id="in-desc" class="input" placeholder="Descripción/Detalles">
-                <button class="btn-main" id="btn-sync" onclick="handleSave(event)">SINCRONIZAR BÚNKER</button>
+                <input type="date" id="in-fecha" class="input"><input type="text" id="in-desc" class="input" placeholder="Descripción"><button class="btn-main" id="btn-sync" onclick="handleSave(event)">SINCRONIZAR BÚNKER</button>
             </div>
         </section>
 
-        <!-- LOG -->
         <section id="v-hist" class="view hidden">
-            <div class="card">
-                <div class="card-title">📊 Log Detallado</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:1rem;">
-                    <input type="text" id="h-search" class="input" placeholder="🔍 Buscar..." oninput="renderH()" style="margin:0; height:2.8rem;">
-                    <select id="h-type" class="select" onchange="renderH()" style="margin:0; height:2.8rem;"><option value="all">TODOS</option><option value="gastovariable">Variable</option><option value="gastofijo">Fijo</option><option value="ingreso">Ingreso</option></select>
-                </div>
-                <div class="table-wrap"><table><thead><tr><th>FECHA</th><th>CAT.</th><th>SUBCAT.</th><th>DESC.</th><th style="text-align:right;">S/</th><th style="text-align:center;">X</th></tr></thead><tbody id="h-body"></tbody></table></div>
-            </div>
+            <div class="card"><div class="card-title">📊 Log Detallado</div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:1rem;"><input type="text" id="h-search" class="input" placeholder="Buscar..." oninput="renderH()"><select id="h-type" class="select" onchange="renderH()"><option value="all">TODOS</option><option value="gastovariable">Var</option><option value="gastofijo">Fijo</option><option value="ingreso">Ingr</option></select></div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>CAT.</th><th>SUB.</th><th>DESC</th><th style="text-align:right;">S/</th><th>X</th></tr></thead><tbody id="h-body"></tbody></table></div></div>
         </section>
 
-        <!-- COMPRAS -->
-        <section id="v-save" class="view hidden">
-            <div class="card" style="border:2.5px solid #8B5CF6;">
-                <div class="card-title" style="color:#8B5CF6;">🛍️ Wishlist ISALIFER</div>
-                <input type="text" id="s-nombre" class="input" placeholder="¿Qué comprar?">
-                <input type="number" id="s-costo" class="input" placeholder="Costo Estimado S/">
-                <select id="s-prioridad" class="select"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select>
-                <input type="date" id="s-f-tentativa" class="input">
-                <button class="btn-main" style="background:#8B5CF6;" onclick="savePriorityPurchase()">AGREGAR</button>
-            </div>
-            <div id="wishlist-ui"></div>
-        </section>
-
-        <!-- TC / DEUDAS / REPORTES / BUDGET -->
-        <section id="v-cc" class="view hidden"><div class="card"><div class="card-title">⚡ DIFERIDOS (TC)</div><input type="number" id="cc-monto" class="input" placeholder="Monto S/"><select id="cc-tarjeta" class="select"></select><input type="text" id="cc-concepto" class="input" placeholder="Concepto"><input type="date" id="cc-fecha" class="input"><button class="btn-main" style="background:#8B5CF6;" onclick="saveCCPurchase()">PROGRAMAR</button></div><div id="cc-history-ui"></div></section>
-        <section id="v-cred" class="view hidden"><div class="card" style="border:2.5px solid #EF4444;"><div class="card-title">🛡️ VINCULAR DEUDA</div><input type="text" id="d-banco" class="input" placeholder="Banco / Marca"><input type="number" id="d-tea" class="input" placeholder="TEA %"><input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/"><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="d-cierre" class="input" placeholder="Cierre"><input type="number" id="d-pago" class="input"></div><button class="btn-main" onclick="saveDebt()">VINCULAR</button></div><div id="debt-ranking-ui"></div><div class="card"><div class="card-title">📅 Timeline (1-31)</div><div id="gantt-ui"></div></div></section>
-        <section id="v-reports" class="view hidden"><div class="card"><div class="card-title">📈 Balance Mensual Familiar</div><div style="height:320px;"><canvas id="repBalanceChart"></canvas></div></div><div class="card"><div class="card-title">📊 Margen Neto</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div></section>
-        <section id="v-budget" class="view hidden"><div class="card"><div class="card-title">🎯 Control de Presupuestos</div><div id="budget-ui"></div></div></section>
+        <section id="v-save" class="view hidden"><div class="card" style="border:2.5px solid #8B5CF6;"><div class="card-title">🛍️ Wishlist</div><input type="text" id="s-nombre" class="input" placeholder="Ítem"><input type="number" id="s-costo" class="input" placeholder="Costo"><select id="s-prioridad" class="select"><option>Alta</option><option>Media</option><option>Baja</option></select><button class="btn-main" onclick="savePriorityPurchase()">AGREGAR</button></div><div id="wishlist-ui"></div></section>
+        <section id="v-cc" class="view hidden"><div class="card"><div class="card-title">⚡ DIFERIDOS</div><input type="number" id="cc-monto" class="input"><select id="cc-tarjeta" class="select"></select><input type="date" id="cc-fecha" class="input"><button class="btn-main" onclick="saveCCPurchase()">PROGRAMAR</button></div><div id="cc-history-ui"></div></section>
+        <section id="v-cred" class="view hidden"><div class="card" style="border:2.5px solid #EF4444;"><div class="card-title">🛡️ DEUDAS</div><input type="text" id="d-banco" class="input" placeholder="Banco"><input type="number" id="d-tea" class="input" placeholder="TEA %"><input type="number" id="d-cuota" class="input"><button class="btn-main" onclick="saveDebt()">VINCULAR</button></div><div id="debt-ranking-ui"></div><div class="card"><div class="card-title">📅 TIMELINE</div><div id="gantt-ui"></div></div></section>
+        <section id="v-reports" class="view hidden"><div class="card"><div class="card-title">📈 Balance Mensual (Apilado Negro/Rojo)</div><div style="height:320px;"><canvas id="repBalanceChart"></canvas></div></div><div class="card"><div class="card-title">📊 Margen Neto (Utilidad Real)</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div></section>
     </main>
 
     <nav class="nav hidden" id="ui-nav">
@@ -233,7 +148,7 @@
         <button class="nav-item" onclick="nav('v-cred',this)">Deudas</button>
         <button class="nav-item" onclick="nav('v-reports',this)">Reportes</button>
         <button class="nav-item" onclick="nav('v-save',this)">Compras</button>
-        <button class="nav-item" onclick="nav('v-budget',this)">Presup.</button>
+        <button class="nav-item" onclick="nav('v-budget',this)">Budget</button>
     </nav>
 
 <script>
@@ -252,17 +167,10 @@
         interno: ['🏠 Aporte Diario Casa','🛒 Diario Casa','🍳 Cocina','📦 Varios'].sort()
     };
 
-    const STATIC_SUBS = { '💡 Servicios del hogar (luz, agua, internet)': ['Luz', 'Agua', 'Internet', 'Gas', 'Mantenimiento'], '🏥 Seguros (salud Lilibeth, Fer, otros)': ['Lili', 'Fer', 'Vehicular', 'Otros'] };
-
-    sb.auth.onAuthStateChange((event, session) => {
-        if (session) { user = session.user; initUI(); } 
-        else { document.getElementById('login-screen').classList.remove('hidden'); ['ui-header','ui-main','ui-nav'].forEach(x => document.getElementById(x).classList.add('hidden')); }
-    });
-
+    sb.auth.onAuthStateChange((event, session) => { if(session){user=session.user; initUI();} else{document.getElementById('login-screen').classList.remove('hidden'); ['ui-header','ui-main','ui-nav'].forEach(x=>document.getElementById(x).classList.add('hidden'));} });
     async function handleLogin() { await sb.auth.signInWithPassword({ email: document.getElementById('log-email').value, password: document.getElementById('log-pass').value }); }
     async function handleLogout() { await sb.auth.signOut(); }
-
-    function initUI() { document.getElementById('login-screen').classList.add('hidden'); ['ui-header','ui-main','ui-nav'].forEach(x => document.getElementById(x).classList.remove('hidden')); document.getElementById('user-tag').textContent = user.email.includes('lilibeth') ? "LILI" : "ISAAC"; setT('gastovariable', null); sync(); }
+    function initUI() { document.getElementById('login-screen').classList.add('hidden'); ['ui-header','ui-main','ui-nav'].forEach(x=>document.getElementById(x).classList.remove('hidden')); document.getElementById('user-tag').textContent = user.email.includes('lilibeth') ? "LILI" : "ISAAC"; setT('gastovariable', null); document.getElementById('b-cat').innerHTML = MASTER_CATS.gastovariable.map(c=>`<option>${c}</option>`).join(''); sync(); }
 
     async function sync() {
         const { data: t } = await sb.from('transactions').select('*').order('date', {ascending:false});
@@ -296,10 +204,10 @@
         const a_ = cT.filter(t => t.monto > 0).reduce((s,t) => s + parseFloat(t.monto), 0);
         const g_ = cT.filter(t => t.monto < 0).reduce((s,t) => s + Math.abs(t.monto), 0);
         document.getElementById('casa-saldo').textContent = `S/ ${(a_ - g_).toLocaleString('en-US',{minimumFractionDigits:2})}`;
-        document.getElementById('casa-log-body').innerHTML = cT.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.descripcion || t.categoria}</td><td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
+        document.getElementById('casa-log-body').innerHTML = cT.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.descripcion || t.categoria}</td><td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">${Math.abs(t.monto).toFixed(0)}</td><td><button class="btn-icon" onclick="deleteTx('${t.id}')">X</button></td></tr>`).join('');
 
         const sim = document.getElementById('calc-tarjeta'); if(sim) sim.innerHTML = debts.map(d => `<option value="${d.tea}">${d.banco_marca}</option>`).join('');
-        renderCharts(fT); renderD(); renderG(); renderH(); renderS(); renderBudgets(fT);
+        renderCharts(fT); renderD(); renderG(); renderH(); renderS(); renderBudgets(fT); renderBudgetManager();
     }
 
     async function handleSave(event) {
@@ -307,11 +215,8 @@
         const btn = event.currentTarget || document.getElementById('btn-sync');
         const ot = btn.textContent; btn.textContent = "⌛ PROCESANDO..."; btn.disabled = true;
         try {
-            const m = parseFloat(document.getElementById('in-monto').value);
-            const c = document.getElementById('in-cat').value;
-            const acc = document.getElementById('in-acc').value;
-            const f = document.getElementById('in-fecha').value || new Date().toISOString().split('T')[0];
-            const d = document.getElementById('in-desc').value;
+            const m = parseFloat(document.getElementById('in-monto').value); const c = document.getElementById('in-cat').value; const acc = document.getElementById('in-acc').value;
+            const f = document.getElementById('in-fecha').value || new Date().toISOString().split('T')[0]; const d = document.getElementById('in-desc').value;
             const sEl = document.getElementById('in-subcat'); const sub = sEl ? sEl.value : "";
             if(!m) throw new Error("Monto inválido");
             const t = MASTER_CATS.ingreso.includes(c) ? 'ingreso' : (MASTER_CATS.gastofijo.includes(c) ? 'gastofijo' : 'gastovariable');
@@ -322,9 +227,7 @@
     }
 
     async function saveGastoCasa() {
-        if (!user) return;
-        const btn = document.getElementById('btn-save-casa');
-        const ot = btn.textContent; btn.textContent = "⌛..."; btn.disabled = true;
+        if (!user) return; const btn = document.getElementById('btn-save-casa'); const ot = btn.textContent; btn.textContent = "⌛..."; btn.disabled = true;
         try {
             const m = parseFloat(document.getElementById('ca-monto').value); const d = document.getElementById('ca-desc').value;
             if(!m) throw new Error("Monto vacío");
@@ -344,38 +247,44 @@
     }
 
     function renderReports() {
-        if (!txs) return;
-        const curY = new Date().getFullYear(); const dM = {}; for(let i=0; i<12; i++) dM[`${curY}-${String(i+1).padStart(2,'0')}`] = { i:0, ef:0, ev:0 };
+        if (!txs) return; const curY = new Date().getFullYear(); const dM = {}; for(let i=0; i<12; i++) dM[`${curY}-${String(i+1).padStart(2,'0')}`] = { i:0, ef:0, ev:0 };
         txs.filter(x => x.tipo !== 'interno' && x.categoria !== '🏠 Aporte Diario Casa').forEach(t => {
             const m = t.date.substring(0,7); if(dM[m]) { const v = Math.abs(t.monto); if(t.tipo === 'ingreso') dM[m].i += v; else if(t.tipo === 'gastofijo') dM[m].ef += v; else dM[m].ev += v; }
         });
         const lbs = Object.keys(dM).sort();
         const ctxB = document.getElementById('repBalanceChart').getContext('2d'); if(rBalChart) rBalChart.destroy();
         rBalChart = new Chart(ctxB, { type:'bar', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Ingr',data:lbs.map(l=>dM[l].i),backgroundColor:'#10B981',stack:'s0'}, {label:'G.Var',data:lbs.map(l=>dM[l].ev),backgroundColor:'#EF4444',stack:'s1'}, {label:'G.Fijo',data:lbs.map(l=>dM[l].ef),backgroundColor:'#111827',stack:'s1'}]}, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true}}}});
+        const ctxM = document.getElementById('repMarginChart').getContext('2d'); if(rMarChart) rMarChart.destroy();
+        rMarChart = new Chart(ctxM, { type:'line', data:{ labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets:[{label:'Margen Neto',data:lbs.map(l=>dM[l].i-(dM[l].ef+dM[l].ev)),borderColor:'#8B5CF6',backgroundColor:'rgba(139,92,246,0.1)',fill:true}] }, options:{responsive:true,maintainAspectRatio:false} });
     }
 
     function renderS() {
         const cont = document.getElementById('wishlist-ui');
         cont.innerHTML = wishlist.map(p => {
             const clr = p.prioridad === 'Alta' ? 'var(--danger)' : (p.prioridad === 'Media' ? 'var(--accent)' : '#94A3B8');
-            return `<div class="card" style="border-left:6px solid ${clr}"><div style="display:flex; justify-content:space-between;"><div><span style="font-weight:900; font-size:0.9rem;">${p.item_nombre}</span><br><span style="font-size:0.6rem; opacity:0.6;">Prioridad: ${p.prioridad}</span></div><div style="text-align:right;"><span style="font-weight:900; color:${clr};">S/ ${parseFloat(p.costo_estimado).toFixed(2)}</span><br><button class="btn-icon" onclick="deleteWish('${p.id}')">🗑️</button></div></div></div>`;
+            return `<div class="card" style="border-left:6px solid ${clr}"><div style="display:flex; justify-content:space-between;"><div><span style="font-weight:900; font-size:0.9rem;">${p.item_nombre}</span><br><span style="font-size:0.6rem; opacity:0.6;">Prioridad: ${p.prioridad}</span></div><div style="text-align:right;"><span style="font-weight:900; color:${clr};">S/ ${parseFloat(p.costo_estimado).toFixed(0)}</span><br><button class="btn-icon" onclick="deleteWish('${p.id}')">X</button></div></div></div>`;
         }).join('');
     }
 
-    async function savePriorityPurchase() { const p = { item_nombre: document.getElementById('s-nombre').value, costo_estimado: parseFloat(document.getElementById('s-costo').value), prioridad: document.getElementById('s-prioridad').value, fecha_tentativa: document.getElementById('s-f-tentativa').value, usuario_id: user.id }; await sb.from('future_purchases').insert([p]); sync(); }
+    async function savePriorityPurchase() { const p = { item_nombre: document.getElementById('s-nombre').value, costo_estimado: parseFloat(document.getElementById('s-costo').value), prioridad: document.getElementById('s-prioridad').value, usuario_id: user.id }; await sb.from('future_purchases').insert([p]); sync(); }
     async function deleteWish(id) { await sb.from('future_purchases').delete().eq('id',id); sync(); }
+    async function saveBudgetRemote() { const c = document.getElementById('b-cat').value, m = parseFloat(document.getElementById('b-monto').value); await sb.from('budgets').upsert({ categoria: c, monto_quincenal: m, usuario_id: user.id }, { onConflict: 'categoria' }); sync(); }
+    async function deleteBudget(id) { await sb.from('budgets').delete().eq('id', id); sync(); }
+    function renderBudgetManager() { document.getElementById('budget-manager-ui').innerHTML = dbBudgets.map(b => `<div style="display:flex; justify-content:space-between; align-items:center; background:#F8FAFC; padding:8px 12px; margin-bottom:6px; border-radius:10px; font-size:0.7rem;"><span>${b.categoria}</span><strong>S/ ${b.monto_quincenal}</strong><button class="btn-icon" onclick="deleteBudget('${b.id}')">X</button></div>`).join(''); }
+
     function nav(id, el) { if(!el || !document.getElementById(id)) return; document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
-    function updateSubCats() { const cat = document.getElementById('in-cat').value; const wrap = document.getElementById('subcat-wrap'); const cont = document.getElementById('subcat-container'); let d_ = STATIC_SUBS[cat] || null; if(cat === '💳 Tarjetas de crédito') d_ = debts.map(d => d.banco_marca); if (d_) { wrap.classList.remove('hidden'); cont.innerHTML = `<select id="in-subcat" class="select">${d_.map(s => `<option value="${s}">${s}</option>`).join('')}</select>`; } else { wrap.classList.add('hidden'); cont.innerHTML = ""; } }
-    function renderH() { const q = document.getElementById('h-search').value.toLowerCase(); const t = document.getElementById('h-type').value; let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria.substring(0,10)}</td><td>${(x.subcategoria||'')}</td><td>${(x.descripcion||'')}</td><td style="text-align:right; color:${x.monto > 0 ? 'var(--emerald)':'var(--danger)'}">${Math.abs(x.monto).toFixed(0)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">X</button></td></tr>`).join(''); }
-    function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let ds = ""; for(let i=1; i<=31; i++) { let st = i <= d.dia_cierre ? "background:var(--billing-cycle);" : "background:var(--safe-zone);"; if(i === d.dia_pago) st = "background:var(--danger); scale:0.8; border-radius:50%;"; ds += `<div style="flex:1; height:30px; border-right:1px solid rgba(0,0,0,0.05); ${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:900; margin-top:12px;">${d.banco_marca}</div><div class="gantt-master">${ds}</div>`; }).join(''); }
-    function renderD() { document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `<div class="card" style="border-left:5px solid ${d.tea > 80 ? 'var(--danger)':'var(--accent)'}"><div style="display:flex; justify-content:space-between;"><strong>${d.banco_marca}</strong><div style="text-align:right;">TEA: ${d.tea}%<br>Cuota: S/ ${d.cuota_mensual}</div></div></div>`).join(''); }
-    function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); const mX = b.monto_quincenal; const over = g > mX; return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${over?'⚠️ ':''}${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${mX}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/mX)*100,100)}%; background:${over?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
-    function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value); const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; const n = parseInt(document.getElementById('calc-cuotas').value); if(!m || !tea || !n) return; const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,n))/(Math.pow(1+tem,n)-1); document.getElementById('calc-res').textContent = `CUOTA ESTIMADA: S/ ${c.toFixed(2)}`; }
+    function updateSubCats() { const cat = document.getElementById('in-cat').value; const wrap = document.getElementById('subcat-wrap'); const cont = document.getElementById('subcat-container'); let d_ = debts.map(d => d.banco_marca); if (cat === '💳 Tarjetas de crédito') { wrap.classList.remove('hidden'); cont.innerHTML = `<select id="in-subcat" class="select">${d_.map(s => `<option value="${s}">${s}</option>`).join('')}</select>`; } else { wrap.classList.add('hidden'); cont.innerHTML = ""; } }
+    function renderH() { const q = document.getElementById('h-search').value.toLowerCase(); const t = document.getElementById('h-type').value; let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria.substring(0,8)}</td><td>${(x.subcategoria||'').substring(0,8)}</td><td>${(x.descripcion||'').substring(0,10)}</td><td style="text-align:right;">${Math.abs(x.monto).toFixed(0)}</td><td><button class="btn-icon" onclick="deleteTx('${x.id}')">X</button></td></tr>`).join(''); }
+    function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let ds = ""; for(let i=1; i<=31; i++) { let st = i <= 20 ? "background:#F8FAFC;" : "background:rgba(139,92,246,0.1);"; if(i === 25) st = "background:var(--danger); scale:0.8; border-radius:50%;"; ds += `<div style="flex:1; height:30px; border-right:1px solid rgba(0,0,0,0.05); ${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:900; margin-top:8px;">${d.banco_marca}</div><div style="display:flex; height:20px; border-radius:4px; overflow:hidden; border:1px solid #ddd;">${ds}</div>`; }).join(''); }
+    function renderD() { document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `<div class="card" style="padding:1rem; margin-bottom:0.5rem; border-left:5px solid var(--danger);"><div style="display:flex; justify-content:space-between;"><strong>${d.banco_marca}</strong><span>TEA: ${d.tea}%</span></div></div>`).join(''); }
+    function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); const mX = b.monto_quincenal; const over = g > mX; return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${mX}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/mX)*100,100)}%; background:${over?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
+    function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value); const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; if(!m || !tea) return; const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,12))/(Math.pow(1+tem,12)-1); document.getElementById('calc-res').textContent = `CUOTA EST: S/ ${c.toFixed(2)}`; }
     async function saveDebt() { await sb.from('debts').insert([{ banco_marca: document.getElementById('d-banco').value, tea: parseFloat(document.getElementById('d-tea').value), cuota_mensual: parseFloat(document.getElementById('d-cuota').value), titular_id: user.id }]); sync(); }
-    async function saveCCPurchase() { await sb.from('card_consumptions').insert([{ monto: parseFloat(document.getElementById('cc-monto').value), concepto: document.getElementById('cc-concepto').value, tarjeta_id: document.getElementById('cc-tarjeta').value, cuenta_usuario_id: user.id }]); sync(); }
+    async function saveCCPurchase() { await sb.from('card_consumptions').insert([{ monto: parseFloat(document.getElementById('cc-monto').value), tarjeta_id: document.getElementById('cc-tarjeta').value, cuenta_usuario_id: user.id }]); sync(); }
     async function deleteTx(id) { if(confirm("¿Eliminar?")) { await sb.from('transactions').delete().eq('id', id); sync(); } }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
+    function importCSV() { alert("Simulando Importación..."); }
 </script>
 </body>
 </html>
