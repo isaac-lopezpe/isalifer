@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V34.0 - TOTAL RESTORATION</title>
+    <title>SISTEMA ISALIFER V34.1 - TOTAL RESTORATION (FINAL Tweak)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -86,10 +86,10 @@
         <div class="card" style="padding:1rem; border:2px solid #8B5CF6;">
             <div class="card-title" style="font-size:0.6rem;">🛒 Simulador Táctico</div>
             <input type="number" id="calc-monto" class="input" placeholder="Monto S/" style="height:3rem; margin-bottom:0.5rem;">
-            <input type="number" id="calc-tea" class="input" placeholder="TEA %" style="height:3rem; margin-bottom:0.5rem;">
-            <input type="number" id="calc-cuotas" class="input" placeholder="Cuotas" style="height:3rem; margin-bottom:0.8rem;">
+            <select id="calc-tarjeta" class="select" style="height:3rem; margin-bottom:0.5rem;"></select>
+            <input type="number" id="calc-cuotas" class="input" placeholder="N° de Cuotas" style="height:3rem; margin-bottom:0.8rem;">
             <button class="btn-main" style="height:3rem; background:#8B5CF6;" onclick="runTacticalCalc()">CALCULAR</button>
-            <div id="calc-res" style="margin-top:10px; font-weight:800; font-size:0.7rem; color:#EF4444; font-weight:900;"></div>
+            <div id="calc-res" style="margin-top:10px; font-weight:900; font-size:0.7rem; color:#EF4444; text-align:center;"></div>
         </div>
         <button class="btn-main" style="background:#F1F5F9; color:#334155 !important; border:2.5px solid var(--border); margin-bottom:1rem;" onclick="importCSV()">📂 IMPORTAR LOG (.CSV)</button>
         <button class="btn-main" style="background:#000; color:#fff;" onclick="handleLogout()">DESCONECTAR BÚNKER</button>
@@ -304,6 +304,7 @@
 
         document.getElementById('ui-survival').textContent = `S/ ${(tI - tF - tV).toLocaleString('en-US',{minimumFractionDigits:2})}`;
         
+        // REPO DETALLADO DASHBOARD
         let sHtml = ""; 
         [['ing','INGRESOS', tI, 'var(--emerald)'],['fix','EGRESOS FIJOS', tF, 'var(--accent)'],['var','EGRESOS VARIABLES', tV, 'var(--danger)']].forEach(([k,l,val,clr]) => {
             if(val > 0) {
@@ -313,12 +314,16 @@
         });
         document.getElementById('ui-summary-cats').innerHTML = sHtml || "<p style='text-align:center; opacity:0.6; padding:20px;'>Sin datos externos.</p>";
 
-        // SALDO CASA V34
+        // SALDO CASA
         const casaT = txs.filter(t => t.tipo === 'interno' || (t.tipo === 'ingreso' && t.account === 'Lili')).sort((a,b)=> a.date < b.date ? 1 : -1);
         const apor = casaT.filter(t => t.monto > 0).reduce((s,t) => s + parseFloat(t.monto), 0);
         const gast = casaT.filter(t => t.monto < 0).reduce((s,t) => s + Math.abs(t.monto), 0);
         document.getElementById('casa-saldo').textContent = `S/ ${(apor - gast).toLocaleString('en-US',{minimumFractionDigits:2})}`;
         document.getElementById('casa-log-body').innerHTML = casaT.map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.descripcion || t.categoria}</td><td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
+
+        // SIMULADOR TÁCTICO V34.1
+        const sim = document.getElementById('calc-tarjeta');
+        if(sim) sim.innerHTML = debts.map(d => `<option value="${d.tea}">${d.banco_marca}</option>`).join('');
 
         renderCharts(fT); renderD(); renderG(); renderCCHistory(); renderBudgets(fT); renderH();
     }
@@ -379,7 +384,16 @@
     function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); const mX = b.monto_quincenal; const over = g > mX; return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${over?'⚠️ ':''}${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${mX}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/mX)*100,100)}%; background:${over?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
     function renderCCHistory() { document.getElementById('cc-history-ui').innerHTML = ccData.map(c => `<div style="font-size:0.7rem; border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between;"><span>${c.concepto}</span><strong>S/ ${c.monto}</strong></div>`).join(''); }
 
-    function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value), tea = parseFloat(document.getElementById('calc-tea').value)/100, n = parseInt(document.getElementById('calc-cuotas').value); const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,n))/(Math.pow(1+tem,n)-1); document.getElementById('calc-res').textContent = `CUOTA ESTIMADA: S/ ${c.toFixed(2)}`; }
+    function runTacticalCalc() { 
+        const m = parseFloat(document.getElementById('calc-monto').value);
+        const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100;
+        const n = parseInt(document.getElementById('calc-cuotas').value);
+        if(!m || !tea || !n) return;
+        const tem = Math.pow(1+tea, 1/12)-1;
+        const c = (m*tem*Math.pow(1+tem,n))/(Math.pow(1+tem,n)-1);
+        document.getElementById('calc-res').textContent = `CUOTA ESTIMADA: S/ ${c.toFixed(2)}`;
+    }
+
     function nav(id, el) { if(!el || !document.getElementById(id)) return; document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); }
     async function saveDebt() { await sb.from('debts').insert([{ banco_marca: document.getElementById('d-banco').value, tea: parseFloat(document.getElementById('d-tea').value), cuota_mensual: parseFloat(document.getElementById('d-cuota').value), dia_cierre: parseInt(document.getElementById('d-cierre').value), dia_pago: parseInt(document.getElementById('d-pago').value), titular_id: user.id }]); sync(); }
     async function saveCCPurchase() { await sb.from('card_consumptions').insert([{ monto: parseFloat(document.getElementById('cc-monto').value), concepto: document.getElementById('cc-concepto').value, tarjeta_id: document.getElementById('cc-tarjeta').value, fecha_pago_estimada: document.getElementById('cc-fecha').value, cuenta_usuario_id: user.id }]); sync(); }
@@ -387,7 +401,7 @@
     async function deleteTx(id) { if(confirm("¿Eliminar?")) { await sb.from('transactions').delete().eq('id', id); sync(); } }
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
-    function importCSV() { alert("Carga el CSV desde tu equipo."); }
+    function importCSV() { alert("Selecciona CSV."); }
 </script>
 </body>
 </html>
