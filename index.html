@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V35.2 - ESTABILIDAD MÓVIL</title>
+    <title>SISTEMA ISALIFER V36.0 - MOBILE OPTIMIZED</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,13 +17,47 @@
             --safe-zone: rgba(139, 92, 246, 0.1); --billing-cycle: #F8FAFC;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; color: var(--text); }
-        body { background: var(--bg); padding-bottom: 110px; min-height: 100vh; overflow-x: hidden; }
+        
+        /* FIX V36: Espaciado de vista para que el nav no tape contenido */
+        body { background: var(--bg); padding-bottom: 120px; min-height: 100vh; overflow-x: hidden; }
+        
         .container { padding: 1.25rem; max-width: 680px; margin: 0 auto; }
         .hidden { display: none !important; }
         
         .header { position: sticky; top: 0; z-index: 200; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 2.5px solid var(--border); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
-        .nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #000000; padding: 6px; border-radius: 36px; display: flex; gap: 4px; z-index: 500; width: 95vw; max-width: 680px; justify-content: space-around; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
-        .nav-item { padding: 9px 8px; border-radius: 28px; color: #94A3B8; font-size: 0.6rem; font-weight: 800; cursor: pointer; border: none; background: transparent; transition: 0.2s; white-space: nowrap; }
+        
+        /* FIX V36: Navegación Scrollable y Responsive */
+        .nav { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: #000000; 
+            padding: 8px 12px; 
+            display: flex; 
+            gap: 10px; 
+            z-index: 500; 
+            justify-content: flex-start; /* Permite el flujo desde el inicio */
+            overflow-x: auto; /* Scroll horizontal */
+            white-space: nowrap; /* Evita que los items bajen */
+            -webkit-overflow-scrolling: touch; /* Sabor mobile suave */
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.2);
+            scrollbar-width: none; /* Ocultar scrollbar Firefox */
+        }
+        .nav::-webkit-scrollbar { display: none; } /* Ocultar scrollbar Chrome/Safari */
+        
+        .nav-item { 
+            padding: 10px 14px; 
+            border-radius: 24px; 
+            color: #94A3B8; 
+            font-size: 0.65rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+            border: none; 
+            background: transparent; 
+            transition: 0.2s; 
+            flex-shrink: 0; /* Evita que los botones se achiquen */
+        }
         .nav-item.active { background: var(--accent); color: #fff; }
 
         .card { background: var(--card); border: 2.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); position: relative; }
@@ -35,17 +69,22 @@
         .input, .select { width: 100%; height: 3.5rem; border-radius: 12px; border: 2px solid #E2E8F0; padding: 0 1rem; font-size: 0.95rem; margin-bottom: 1.2rem; outline: none; background: #fff; }
         .input:focus { border-color: var(--accent); }
 
-        .table-wrap { overflow-x: auto; border: 2.5px solid var(--border); border-radius: 16px; background: #fff; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.7rem; min-width: 550px; }
+        /* TABLAS RESPONSIVAS V36 */
+        .table-wrap { width: 100%; overflow-x: auto; border: 2.5px solid var(--border); border-radius: 16px; background: #fff; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.7rem; min-width: 500px; }
         th { text-align: left; padding: 1rem 0.6rem; background: #F1F5F9; border-bottom: 2.5px solid var(--border); font-weight: 900; }
         td { padding: 0.8rem 0.6rem; border-bottom: 1px solid #F1F5F9; font-weight: 700; }
-        .btn-icon { background: #F1F5F9; border: 1.5px solid var(--border); padding: 6px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; }
+        
+        @media (max-width: 600px) {
+            table { font-size: 0.65rem; }
+            td, th { padding: 0.7rem 0.4rem; }
+            .container { padding: 1rem; }
+            .card { padding: 1rem; }
+        }
 
         .budget-bar { height: 16px; background: #F1F5F9; border-radius: 10px; overflow: hidden; margin: 8px 0; border: 1.5px solid #e2e8f0; }
         .budget-fill { height: 100%; transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
-
         .gantt-master { display: flex; height: 30px; gap: 2px; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
-
         .sidebar { position: fixed; top: 0; right: 0; bottom: 0; width: 320px; background: #fff; z-index: 1000; transform: translateX(100%); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 2.5rem 1.5rem; border-left: 5px solid var(--border); overflow-y: auto; }
         .sidebar.open { transform: translateX(0); }
     </style>
@@ -90,7 +129,6 @@
             <button class="btn-main" style="height:3rem; background:#8B5CF6;" onclick="runTacticalCalc()">CALCULAR</button>
             <div id="calc-res" style="margin-top:10px; font-weight:900; font-size:0.7rem; color:#EF4444; text-align:center;"></div>
         </div>
-        <button class="btn-main" style="background:#F1F5F9; color:#334155 !important; border:2.5px solid var(--border); margin-bottom:1rem;" onclick="importCSV()">📂 IMPORTAR LOG (.CSV)</button>
         <button class="btn-main" style="background:#000; color:#fff;" onclick="handleLogout()">DESCONECTAR BÚNKER</button>
     </aside>
 
@@ -100,13 +138,12 @@
             <div class="card" style="background:#8B5CF6; color:#fff; border:none; box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);">
                 <div class="card-title" style="color:#fff; opacity:0.85;">💵 SALDO DE SUPERVIVENCIA</div>
                 <div id="ui-survival" style="font-size:3.2rem; font-weight:900; color:#fff;">S/ 0.00</div>
-                <p style="font-size:0.65rem; color:#fff; opacity:0.8; margin-top:8px;">Saldo Familiar Unificado (Excluye Internos).</p>
+                <p style="font-size:0.65rem; color:#fff; opacity:0.8; margin-top:8px;">Saldo Familiar Unificado.</p>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                 <div class="card"><div class="card-title">🔍 Fuga Variable</div><div style="height:150px;"><canvas id="pieChart"></canvas></div></div>
                 <div class="card"><div class="card-title">📈 Burn Rate</div><div style="height:140px;"><canvas id="burnChart"></canvas></div></div>
             </div>
-            <div class="card"><div class="card-title">🎯 Gestión de Presupuestos Tácticos</div><div id="budget-ui"></div></div>
             <div class="card"><div class="card-title">📊 Resumen por Categorías</div><div id="ui-summary-cats"></div></div>
         </section>
 
@@ -126,20 +163,20 @@
             <div class="card"><div class="card-title">📑 BITÁCORA CASA</div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>DESCRIPCIÓN</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead><tbody id="casa-log-body"></tbody></table></div></div>
         </section>
 
-        <!-- COMPRAS (WISH) -->
+        <!-- COMPRAS -->
         <section id="v-save" class="view hidden">
             <div class="card" style="border:2.5px solid #8B5CF6;">
                 <div class="card-title" style="color:#8B5CF6;">🛍️ Wishlist ISALIFER</div>
-                <input type="text" id="s-nombre" class="input" placeholder="¿Qué quieres comprar?">
+                <input type="text" id="s-nombre" class="input" placeholder="¿Qué comprar?">
                 <input type="number" id="s-costo" class="input" placeholder="Costo Estimado S/">
                 <select id="s-prioridad" class="select"><option value="Alta">Prioridad: Alta</option><option value="Media">Prioridad: Media</option><option value="Baja">Prioridad: Baja</option></select>
                 <input type="date" id="s-f-tentativa" class="input">
-                <button class="btn-main" style="background:#8B5CF6;" onclick="savePriorityPurchase()">AGREGAR A PRIORIDADES</button>
+                <button class="btn-main" style="background:#8B5CF6;" onclick="savePriorityPurchase()">AGREGAR</button>
             </div>
             <div id="wishlist-ui"></div>
         </section>
 
-        <!-- AGREGAR (MÓDULO CENTRAL) -->
+        <!-- AGREGAR -->
         <section id="v-load" class="view hidden">
             <div class="card">
                 <div class="card-title">➕ AGREGAR</div>
@@ -155,15 +192,24 @@
                 <select id="in-acc" class="select"><option>Isaac</option><option>Lili</option></select>
                 <input type="date" id="in-fecha" class="input">
                 <input type="text" id="in-desc" class="input" placeholder="Descripción/Detalles">
-                <button class="btn-main" id="btn-sync" onclick="handleSave(event)">SINCRONIZAR ISALIFER</button>
+                <button class="btn-main" id="btn-sync" onclick="handleSave(event)">SINCRONIZAR BÚNKER</button>
             </div>
         </section>
 
         <!-- TC / DEUDAS / REPORTES / LOG -->
-        <section id="v-cc" class="view hidden"><div class="card"><div class="card-title">⚡ PROGRAMAR CARGO DIFERIDO (TC)</div><input type="number" id="cc-monto" class="input" placeholder="Monto S/"><select id="cc-tarjeta" class="select"></select><input type="text" id="cc-concepto" class="input" placeholder="Concepto"><input type="date" id="cc-fecha" class="input"><button class="btn-main" style="background:#8B5CF6;" onclick="saveCCPurchase()">PROGRAMAR CARGO</button></div><div id="cc-history-ui"></div></section>
-        <section id="v-cred" class="view hidden"><div class="card" style="border:2.5px solid #EF4444;"><div class="card-title">🛡️ VINCULAR NUEVA DEUDA</div><input type="text" id="d-banco" class="input" placeholder="Banco / Marca"><input type="number" id="d-tea" class="input" placeholder="TEA %"><input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/"><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="d-cierre" class="input" placeholder="Día Cierre"><input type="number" id="d-pago" class="input" placeholder="Día Pago"></div><button class="btn-main" onclick="saveDebt()">VINCULAR DEUDA</button></div><div id="debt-ranking-ui"></div><div class="card"><div class="card-title">📅 Gantt Maestro (1-31)</div><div id="gantt-ui"></div></div></section>
-        <section id="v-reports" class="view hidden"><div class="card"><div class="card-title">📈 Balance Mensual Familiar (Pro Comparativo)</div><div style="height:350px;"><canvas id="repBalanceChart"></canvas></div></div><div class="card"><div class="card-title">📊 Margen Neto</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div></section>
-        <section id="v-hist" class="view hidden"><div class="card"><div class="card-title">📊 Log Detallado</div><div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:8px; margin-bottom:1rem;"><input type="text" id="h-search" class="input" placeholder="🔍 Buscar..." oninput="renderH()" style="margin:0; height:2.8rem;"><select id="h-type" class="select" onchange="renderH()" style="margin:0; height:2.8rem;"><option value="all">Tipos (TODOS)</option><option value="gastovariable">Var.</option><option value="gastofijo">Fijo</option><option value="ingreso">Ingr.</option><option value="interno">Casa</option></select><select id="h-cat-fltr" class="select" onchange="renderH()" style="margin:0; height:2.8rem;"></select></div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>CATEGORÍA</th><th>SUBCAT.</th><th>DESC.</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead><tbody id="h-body"></tbody></table></div></div></section>
+        <section id="v-cc" class="view hidden"><div class="card"><div class="card-title">⚡ DIFERIDOS (TC)</div><input type="number" id="cc-monto" class="input" placeholder="Monto S/"><select id="cc-tarjeta" class="select"></select><input type="text" id="cc-concepto" class="input" placeholder="Concepto"><input type="date" id="cc-fecha" class="input"><button class="btn-main" style="background:#8B5CF6;" onclick="saveCCPurchase()">PROGRAMAR</button></div><div id="cc-history-ui"></div></section>
+        <section id="v-cred" class="view hidden"><div class="card" style="border:2.5px solid #EF4444;"><div class="card-title">🛡️ VINCULAR DEUDA</div><input type="text" id="d-banco" class="input" placeholder="Banco / Marca"><input type="number" id="d-tea" class="input" placeholder="TEA %"><input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/"><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="d-cierre" class="input" placeholder="Día Cierre"><input type="number" id="d-pago" class="input" placeholder="Día Pago"></div><button class="btn-main" onclick="saveDebt()">VINCULAR</button></div><div id="debt-ranking-ui"></div><div class="card"><div class="card-title">📅 Timeline (1-31)</div><div id="gantt-ui"></div></div></section>
+        <section id="v-reports" class="view hidden"><div class="card"><div class="card-title">📈 Balance Mensual Familiar</div><div style="height:320px;"><canvas id="repBalanceChart"></canvas></div></div><div class="card"><div class="card-title">📊 Margen Neto</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div></section>
+        <section id="v-hist" class="view hidden">
+            <div class="card">
+                <div class="card-title">📊 Log Detallado</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:1rem;">
+                    <input type="text" id="h-search" class="input" placeholder="🔍 Buscar..." oninput="renderH()" style="margin:0; height:2.8rem;">
+                    <select id="h-type" class="select" onchange="renderH()" style="margin:0; height:2.8rem;"><option value="all">TODOS</option><option value="gastovariable">Variable</option><option value="gastofijo">Fijo</option><option value="ingreso">Ingreso</option></select>
+                </div>
+                <div class="table-wrap"><table id="log-table"><thead><tr><th>FECHA</th><th>CAT.</th><th>SUBCAT.</th><th>DESC.</th><th style="text-align:right;">S/</th><th style="text-align:center;">X</th></tr></thead><tbody id="h-body"></tbody></table></div>
+            </div>
+        </section>
     </main>
 
     <nav class="nav hidden" id="ui-nav">
@@ -243,43 +289,23 @@
     }
 
     async function handleSave(event) {
-        if (!user) { alert('Sesión expirada, por favor vuelve a entrar'); return; }
+        if (!user) { alert('Sesión expirada'); return; }
         const btn = event.currentTarget || document.getElementById('btn-sync');
-        const originalText = btn.textContent;
-        btn.textContent = "⌛ PROCESANDO...";
-        btn.disabled = true;
-
+        const ot = btn.textContent; btn.textContent = "⌛ PROCESANDO..."; btn.disabled = true;
         try {
             const m = parseFloat(document.getElementById('in-monto').value);
             const c = document.getElementById('in-cat').value;
             const acc = document.getElementById('in-acc').value;
             const f = document.getElementById('in-fecha').value || new Date().toISOString().split('T')[0];
             const d = document.getElementById('in-desc').value;
-            
-            // FIX V35.2: Captura segura de subcategoría
-            const subEl = document.getElementById('in-subcat');
-            const sub = subEl ? subEl.value : "";
-            
+            const sEl = document.getElementById('in-subcat');
+            const sub = sEl ? sEl.value : "";
             if(!m) throw new Error("Monto inválido");
-
             const t = MASTER_CATS.ingreso.includes(c) ? 'ingreso' : (MASTER_CATS.gastofijo.includes(c) ? 'gastofijo' : 'gastovariable');
             const p = { monto: t === 'ingreso' ? m : -m, categoria: c, subcategoria: sub, tipo: t, cuenta_usuario_id: user.id, account: acc, date: f, descripcion: d };
-            
-            if(c === "🛒 Diario Casa (alimentos, casa base)" && acc === "Isaac") {
-                const mir = { monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' };
-                await sb.from('transactions').insert([p, mir]);
-            } else {
-                const { error } = await sb.from('transactions').insert([p]);
-                if(error) throw error;
-            }
-            sync();
-            alert("¡Bóveda Sincronizada!");
-        } catch (e) {
-            alert("Error al guardar: " + e.message);
-        } finally {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }
+            if(c === "🛒 Diario Casa (alimentos, casa base)" && acc === "Isaac") { const mir = { monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' }; await sb.from('transactions').insert([p, mir]); } else { await sb.from('transactions').insert([p]); }
+            sync(); alert("¡Sincronizado!");
+        } catch (e) { alert("Error: " + e.message); } finally { btn.textContent = ot; btn.disabled = false; }
     }
 
     async function saveGastoCasa() {
@@ -313,19 +339,14 @@
         });
         const lbs = Object.keys(dM).sort();
         const ctxB = document.getElementById('repBalanceChart').getContext('2d'); if(rBalChart) rBalChart.destroy();
-        rBalChart = new Chart(ctxB, { type:'bar', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Ingresos',data:lbs.map(l=>dM[l].i),backgroundColor:'#10B981',stack:'s0'}, {label:'G.Variable',data:lbs.map(l=>dM[l].ev),backgroundColor:'#EF4444',stack:'s1'}, {label:'G.Fijo',data:lbs.map(l=>dM[l].ef),backgroundColor:'#111827',stack:'s1'}]}, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true}}}});
+        rBalChart = new Chart(ctxB, { type:'bar', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Ingr',data:lbs.map(l=>dM[l].i),backgroundColor:'#10B981',stack:'s0'}, {label:'G.Var',data:lbs.map(l=>dM[l].ev),backgroundColor:'#EF4444',stack:'s1'}, {label:'G.Fijo',data:lbs.map(l=>dM[l].ef),backgroundColor:'#111827',stack:'s1'}]}, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true}}}});
     }
 
     function renderS() {
         const cont = document.getElementById('wishlist-ui');
         cont.innerHTML = wishlist.map(p => {
             const clr = p.prioridad === 'Alta' ? 'var(--danger)' : (p.prioridad === 'Media' ? 'var(--accent)' : '#94A3B8');
-            return `<div class="card" style="border-left:6px solid ${clr}">
-                <div style="display:flex; justify-content:space-between;">
-                    <div><span style="font-weight:900; font-size:0.9rem;">${p.item_nombre}</span><br><span style="font-size:0.6rem; opacity:0.6;">Prioridad: ${p.prioridad}</span></div>
-                    <div style="text-align:right;"><span style="font-weight:900; color:${clr};">S/ ${parseFloat(p.costo_estimado).toFixed(2)}</span><br><button class="btn-icon" onclick="deleteWish('${p.id}')">🗑️</button></div>
-                </div>
-            </div>`;
+            return `<div class="card" style="border-left:6px solid ${clr}"><div style="display:flex; justify-content:space-between;"><div><span style="font-weight:900; font-size:0.9rem;">${p.item_nombre}</span><br><span style="font-size:0.6rem; opacity:0.6;">Prioridad: ${p.prioridad}</span></div><div style="text-align:right;"><span style="font-weight:900; color:${clr};">S/ ${parseFloat(p.costo_estimado).toFixed(2)}</span><br><button class="btn-icon" onclick="deleteWish('${p.id}')">🗑️</button></div></div></div>`;
         }).join('');
     }
 
@@ -334,17 +355,14 @@
     function nav(id, el) { if(!el || !document.getElementById(id)) return; document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); }
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
     function updateSubCats() { const cat = document.getElementById('in-cat').value; const wrap = document.getElementById('subcat-wrap'); const cont = document.getElementById('subcat-container'); let d_ = STATIC_SUBS[cat] || null; if(cat === '💳 Tarjetas de crédito') d_ = debts.map(d => d.banco_marca); if (d_) { wrap.classList.remove('hidden'); cont.innerHTML = `<select id="in-subcat" class="select">${d_.map(s => `<option value="${s}">${s}</option>`).join('')}</select>`; } else { wrap.classList.add('hidden'); cont.innerHTML = ""; } }
-    function renderH() { const q = document.getElementById('h-search').value.toLowerCase(); const t = document.getElementById('h-type').value; let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria}</td><td>${x.subcategoria || '-'}</td><td>${x.descripcion || ''}</td><td style="text-align:right; color:${x.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(x.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">🗑️</button></td></tr>`).join(''); }
+    function renderH() { const q = document.getElementById('h-search').value.toLowerCase(); const t = document.getElementById('h-type').value; let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria.substring(0,10)}</td><td>${(x.subcategoria||'').substring(0,8)}</td><td>${(x.descripcion||'').substring(0,12)}</td><td style="text-align:right; color:${x.monto > 0 ? 'var(--emerald)':'var(--danger)'}">${Math.abs(x.monto).toFixed(0)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">X</button></td></tr>`); }
     function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let ds = ""; for(let i=1; i<=31; i++) { let st = i <= d.dia_cierre ? "background:var(--billing-cycle);" : "background:var(--safe-zone);"; if(i === d.dia_pago) st = "background:var(--danger); scale:0.8; border-radius:50%;"; ds += `<div style="flex:1; height:30px; border-right:1px solid rgba(0,0,0,0.05); ${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:900; margin-top:12px;">${d.banco_marca}</div><div class="gantt-master">${ds}</div>`; }).join(''); }
     function renderD() { document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `<div class="card" style="border-left:5px solid ${d.tea > 80 ? 'var(--danger)':'var(--accent)'}"><div style="display:flex; justify-content:space-between;"><strong>${d.banco_marca}</strong><div style="text-align:right;">TEA: ${d.tea}%<br>Cuota: S/ ${d.cuota_mensual}</div></div></div>`).join(''); }
-    function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); const mX = b.monto_quincenal; const over = g > mX; return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${over?'⚠️ ':''}${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${mX}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/mX)*100,100)}%; background:${over?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
-    function renderCCHistory() { document.getElementById('cc-history-ui').innerHTML = ccData.map(c => `<div style="font-size:0.7rem; border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between;"><span>${c.concepto}</span><strong>S/ ${c.monto}</strong></div>`).join(''); }
     function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value); const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; const n = parseInt(document.getElementById('calc-cuotas').value); if(!m || !tea || !n) return; const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,n))/(Math.pow(1+tem,n)-1); document.getElementById('calc-res').textContent = `CUOTA ESTIMADA: S/ ${c.toFixed(2)}`; }
     async function saveDebt() { await sb.from('debts').insert([{ banco_marca: document.getElementById('d-banco').value, tea: parseFloat(document.getElementById('d-tea').value), cuota_mensual: parseFloat(document.getElementById('d-cuota').value), titular_id: user.id }]); sync(); }
     async function saveCCPurchase() { await sb.from('card_consumptions').insert([{ monto: parseFloat(document.getElementById('cc-monto').value), concepto: document.getElementById('cc-concepto').value, tarjeta_id: document.getElementById('cc-tarjeta').value, cuenta_usuario_id: user.id }]); sync(); }
     async function deleteTx(id) { if(confirm("¿Eliminar?")) { await sb.from('transactions').delete().eq('id', id); sync(); } }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
-    function importCSV() { alert("Selecciona CSV."); }
 </script>
 </body>
 </html>
