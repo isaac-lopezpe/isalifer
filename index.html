@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V40.0 - INTELIGENCIA Y CRUD</title>
+    <title>SISTEMA ISALIFER V40.1 - TRANSPARENCIA ANALÍTICA</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -38,15 +38,8 @@
             mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
             -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
         }
-        .nav::-webkit-scrollbar { height: 2px; display: block; }
-        .nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-
         @media (min-width: 768px) {
-            .nav { 
-                left: 50%; transform: translateX(-50%); width: fit-content; 
-                justify-content: center; overflow-x: hidden; border-radius: 40px; 
-                bottom: 20px; padding: 8px 25px; mask-image: none; -webkit-mask-image: none;
-            }
+            .nav { left: 50%; transform: translateX(-50%); width: fit-content; justify-content: center; overflow-x: hidden; border-radius: 40px; bottom: 20px; padding: 8px 25px; mask-image: none; -webkit-mask-image: none; }
             .nav-item { scroll-snap-align: none; }
         }
 
@@ -56,18 +49,14 @@
 
         .card { background: var(--card); border: 2.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); position: relative; }
         .card-title { font-size: 0.7rem; font-weight: 900; color: var(--border); text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.5px; }
+        .chart-note { font-size: 0.65rem; color: #64748b; margin-top: -0.7rem; margin-bottom: 1.2rem; line-height: 1.3; font-weight: 500; }
         
         .btn-main { width: 100%; height: 3.5rem; border-radius: 16px; border: none; background: #000000; color: #ffffff !important; font-size: 0.9rem; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-main:active { transform: scale(0.97); opacity: 0.9; }
-
         .input, .select { width: 100%; height: 3.5rem; border-radius: 12px; border: 2px solid #E2E8F0; padding: 0 1rem; font-size: 0.95rem; margin-bottom: 1.2rem; outline: none; background: #fff; }
-        .input:focus { border-color: var(--accent); }
-
         .table-wrap { width: 100%; overflow-x: auto; border: 2.5px solid var(--border); border-radius: 16px; background: #fff; }
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; min-width: 500px; }
         th { text-align: left; padding: 1rem 0.6rem; background: #F1F5F9; border-bottom: 2.5px solid var(--border); font-weight: 900; }
         td { padding: 0.8rem 0.6rem; border-bottom: 1px solid #F1F5F9; font-weight: 700; }
-        
         .budget-bar { height: 16px; background: #F1F5F9; border-radius: 10px; overflow: hidden; margin: 8px 0; border: 1.5px solid #e2e8f0; }
         .budget-fill { height: 100%; transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .sidebar { position: fixed; top: 0; right: 0; bottom: 0; width: 320px; background: #fff; z-index: 1000; transform: translateX(100%); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 2.5rem 1.5rem; border-left: 5px solid var(--border); overflow-y: auto; }
@@ -106,26 +95,24 @@
             <div class="card" style="background:#8B5CF6; color:#fff; border:none;"><div class="card-title" style="color:#fff; opacity:0.85;">💵 SALDO DE SUPERVIVENCIA</div><div id="ui-survival" style="font-size:3.2rem; font-weight:900; color:#fff;">S/ 0.00</div></div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;"><div class="card"><div class="card-title">🔍 Fuga Variable</div><div style="height:150px;"><canvas id="pieChart"></canvas></div></div><div class="card"><div class="card-title">📈 Burn Rate</div><div style="height:140px;"><canvas id="burnChart"></canvas></div></div></div>
             <div class="card"><div class="card-title">📊 Resumen por Categorías</div><div id="ui-summary-cats"></div></div>
-            <!-- Nuevo Gráfico Lili Profesional V40 -->
-            <div class="card"><div class="card-title">📉 Evolución Ingresos Lili (Profesional)</div><div style="height:200px;"><canvas id="chartLiliPro"></canvas></div></div>
+            <!-- Nuevo Gráfico Lili Profesional V40.1 -->
+            <div class="card">
+                <div class="card-title">📉 Evolución Ingresos Lili (Profesional)</div>
+                <p class="chart-note">Muestra exclusivamente los ingresos generados por la actividad profesional de Lili (Excluye aportes de Diario Casa).</p>
+                <div style="height:200px;"><canvas id="chartLiliPro"></canvas></div>
+            </div>
         </section>
 
-        <!-- MÓDULO CASA V40 -->
+        <!-- MÓDULO CASA -->
         <section id="v-casa" class="view hidden">
             <div class="card" style="border:3px solid #DB2777; background:#FFF1F2;">
                 <div class="card-title" style="color:#DB2777;">🏠 DIARIO CASA</div>
                 <h2 id="casa-saldo" style="font-size:2.8rem; font-weight:900; color:#DB2777;">S/ 0.00</h2>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <input type="number" id="ca-monto" class="input" placeholder="Monto S/">
-                    <input type="date" id="ca-fecha" class="input">
-                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="number" id="ca-monto" class="input" placeholder="Monto S/"><input type="date" id="ca-fecha" class="input"></div>
                 <input type="text" id="ca-desc" class="input" placeholder="Descripción">
-                <button class="btn-main" style="background:#DB2777;" id="btn-save-casa" onclick="saveGastoCasa()">REGISTRAR GASTO</button>
+                <button class="btn-main" style="background:#DB2777;" onclick="saveGastoCasa()">REGISTRAR GASTO</button>
             </div>
-            <div class="card">
-                <div class="card-title">📑 BITÁCORA CASA</div>
-                <div class="table-wrap"><table><thead><tr><th>FECHA</th><th>DESC</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead><tbody id="casa-log-body"></tbody></table></div>
-            </div>
+            <div class="card"><div class="card-title">📑 BITÁCORA CASA</div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>DESC</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead><tbody id="casa-log-body"></tbody></table></div></div>
         </section>
 
         <section id="v-budget" class="view hidden">
@@ -142,7 +129,7 @@
                 <select id="in-cat" class="select" onchange="updateSubCats()"></select>
                 <div id="subcat-wrap" class="hidden"><div id="subcat-container"></div></div>
                 <select id="in-acc" class="select"><option>Isaac</option><option>Lili</option></select>
-                <input type="date" id="in-fecha" class="input"><input type="text" id="in-desc" class="input" placeholder="Descripción"><button class="btn-main" id="btn-sync" onclick="handleSave(event)">SINCRONIZAR BÚNKER</button>
+                <input type="date" id="in-fecha" class="input"><input type="text" id="in-desc" class="input" placeholder="Descripción"><button class="btn-main" onclick="handleSave(event)">SINCRONIZAR BÚNKER</button>
             </div>
         </section>
 
@@ -151,9 +138,14 @@
         </section>
 
         <section id="v-save" class="view hidden"><div class="card" style="border:2.5px solid #8B5CF6;"><div class="card-title">🛍️ Wishlist</div><input type="text" id="s-nombre" class="input" placeholder="Ítem"><input type="number" id="s-costo" class="input" placeholder="Costo"><select id="s-prioridad" class="select"><option>Alta</option><option>Media</option><option>Baja</option></select><button class="btn-main" onclick="savePriorityPurchase()">AGREGAR</button></div><div id="wishlist-ui"></div></section>
-        <section id="v-cc" class="view hidden"><div class="card"><div class="card-title">⚡ DIFERIDOS</div><input type="number" id="cc-monto" class="input"><select id="cc-tarjeta" class="select"></select><input type="date" id="cc-fecha" class="input"><button class="btn-main" onclick="saveCCPurchase()">PROGRAMAR</button></div><div id="cc-history-ui"></div></section>
-        <section id="v-cred" class="view hidden"><div class="card" style="border:2.5px solid #EF4444;"><div class="card-title">🛡️ DEUDAS</div><input type="text" id="d-banco" class="input" placeholder="Banco"><input type="number" id="d-tea" class="input" placeholder="TEA %"><input type="number" id="d-cuota" class="input"><button class="btn-main" onclick="saveDebt()">VINCULAR</button></div><div id="debt-ranking-ui"></div><div class="card"><div class="card-title">📅 TIMELINE</div><div id="gantt-ui"></div></div></section>
-        <section id="v-reports" class="view hidden"><div class="card"><div class="card-title">📈 Balance Mensual (Filtro Interno Absoluto)</div><div style="height:320px;"><canvas id="repBalanceChart"></canvas></div></div><div class="card"><div class="card-title">📊 Margen Neto (Utilidad Real)</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div></section>
+        <section id="v-reports" class="view hidden">
+            <div class="card">
+                <div class="card-title">📈 Balance Mensual Familiar</div>
+                <p class="chart-note">Incluye la suma de todos los ingresos de Isaac y Lili, así como los egresos totales de la familia.</p>
+                <div style="height:320px;"><canvas id="repBalanceChart"></canvas></div>
+            </div>
+            <div class="card"><div class="card-title">📊 Margen Neto (Utilidad Real)</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div>
+        </section>
     </main>
 
     <nav class="nav hidden" id="ui-nav">
@@ -210,9 +202,7 @@
 
     function renderAll() {
         if (!txs) return;
-        const r = { start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], end: new Date(new Date().getFullYear(), new Date().getMonth(), 31).toISOString().split('T')[0] }; 
-        if(document.getElementById('time-filter').value === 'all') { r.start = "2020-01-01"; r.end = "2030-12-31"; }
-        const fT = txs.filter(t => t.date >= r.start && t.date <= r.end && t.tipo !== 'interno' && !t.categoria.includes('Casa'));
+        const fT = txs.filter(t => t.tipo !== 'interno' && !t.categoria.includes('Casa'));
         let tI = 0, tF = 0, tV = 0; const s = { ing: {}, fix: {}, var: {} };
         fT.forEach(t => {
             const v = Math.abs(parseFloat(t.monto));
@@ -227,7 +217,6 @@
         });
         document.getElementById('ui-summary-cats').innerHTML = sH || "<p style='text-align:center; opacity:0.6; padding:20px;'>Sin datos externos.</p>";
 
-        // BITÁCORA CASA V40 Lógica Exacta
         const cT = txs.filter(t => (t.account === 'Lili' && t.tipo === 'ingreso') || t.tipo === 'interno').sort((a,b)=> a.date < b.date ? 1 : -1);
         const balCasa = cT.reduce((s,t) => s + parseFloat(t.monto), 0);
         document.getElementById('casa-saldo').textContent = `S/ ${balCasa.toLocaleString('en-US',{minimumFractionDigits:2})}`;
@@ -239,8 +228,6 @@
 
     async function handleSave(event) {
         if (!user) { alert('Sesión expirada'); return; }
-        const btn = event.currentTarget || document.getElementById('btn-sync');
-        btn.textContent = "⌛ PROCESANDO..."; btn.disabled = true;
         try {
             const m = parseFloat(document.getElementById('in-monto').value); const c = document.getElementById('in-cat').value; const acc = document.getElementById('in-acc').value;
             const f = document.getElementById('in-fecha').value; const d = document.getElementById('in-desc').value;
@@ -250,17 +237,17 @@
             const p = { monto: t === 'ingreso' ? m : -m, categoria: c, subcategoria: sub, tipo: t, cuenta_usuario_id: user.id, account: acc, date: f, descripcion: d };
             if(c === "🛒 Diario Casa (alimentos, casa base)" && acc === "Isaac") { const mir = { monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' }; await sb.from('transactions').insert([p, mir]); } else { await sb.from('transactions').insert([p]); }
             sync(); alert("¡Sincronizado!");
-        } catch (e) { alert("Error: " + e.message); } finally { btn.textContent = "SINCRONIZAR BÚNKER"; btn.disabled = false; }
+        } catch (e) { alert("Error: " + e.message); }
     }
 
     async function saveGastoCasa() {
-        if (!user) return; const btn = document.getElementById('btn-save-casa'); btn.textContent = "⌛..."; btn.disabled = true;
+        if (!user) return;
         try {
             const m = parseFloat(document.getElementById('ca-monto').value); const d = document.getElementById('ca-desc').value; const f = document.getElementById('ca-fecha').value;
             if(!m) throw new Error("Monto vacío");
             await sb.from('transactions').insert([{ monto: -m, descripcion: d, date: f, tipo: 'interno', categoria: 'Diario Casa', account: 'Lili', cuenta_usuario_id: user.id }]);
             sync();
-        } catch (e) { alert(e.message); } finally { btn.textContent = "REGISTRAR GASTO"; btn.disabled = false; }
+        } catch (e) { alert(e.message); }
     }
 
     function renderCharts(fT) { 
@@ -273,7 +260,6 @@
         fT.filter(t => t.tipo === 'gastovariable').slice(0,40).forEach(t => { const d = new Date(t.date).getDay(); const idx = d === 0 ? 6 : d - 1; if(t.account === 'Isaac') dI[idx]+=Math.abs(t.monto); else dL[idx]+=Math.abs(t.monto); });
         bChart = new Chart(ctxB, { type:'bar', data:{ labels:['L','M','M','J','V','S','D'], datasets:[{label:'I',data:dI,backgroundColor:'#8B5CF6'},{label:'L',data:dL,backgroundColor:'#DB2777'}] }, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true}},plugins:{legend:{display:false}}} }); 
 
-        // Gráfico Lili Profesional V40 (Excluye Aporte/Diario Casa)
         const ctxL = document.getElementById('chartLiliPro').getContext('2d'); if(lChart) lChart.destroy();
         const curY = new Date().getFullYear(); const lM = {}; for(let i=0; i<12; i++) lM[`${curY}-${String(i+1).padStart(2,'0')}`] = 0;
         txs.filter(t => t.account === 'Lili' && t.tipo === 'ingreso' && !t.categoria.includes('Diario Casa') && !t.categoria.includes('Aporte')).forEach(t => {
@@ -317,7 +303,6 @@
     function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); const mX = b.monto_quincenal; const over = g > mX; return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${mX}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/mX)*100,100)}%; background:${over?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
     function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value); const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; if(!m || !tea) return; const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,12))/(Math.pow(1+tem,12)-1); document.getElementById('calc-res').textContent = `CUOTA EST: S/ ${c.toFixed(2)}`; }
     async function saveDebt() { await sb.from('debts').insert([{ banco_marca: document.getElementById('d-banco').value, tea: parseFloat(document.getElementById('d-tea').value), cuota_mensual: parseFloat(document.getElementById('d-cuota').value), titular_id: user.id }]); sync(); }
-    async function saveCCPurchase() { await sb.from('card_consumptions').insert([{ monto: parseFloat(document.getElementById('cc-monto').value), tarjeta_id: document.getElementById('cc-tarjeta').value, cuenta_usuario_id: user.id }]); sync(); }
     async function deleteTx(id) { if(confirm("¿Eliminar?")) { await sb.from('transactions').delete().eq('id', id); sync(); } }
     async function editTx(id) { const t = txs.find(x=>x.id===id); if(t) { const nV = prompt("Nuevo monto:", Math.abs(t.monto)); if(nV) { await sb.from('transactions').update({ monto: t.monto>0?parseFloat(nV):-parseFloat(nV) }).eq('id', id); sync(); } } }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
