@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V36.0 - MOBILE OPTIMIZED</title>
+    <title>SISTEMA ISALIFER V37.0 - ELITE NAVIGATION</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,36 +18,41 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; color: var(--text); }
         
-        /* FIX V36: Espaciado de vista para que el nav no tape contenido */
-        body { background: var(--bg); padding-bottom: 120px; min-height: 100vh; overflow-x: hidden; }
+        /* FIX V37: Zona de seguridad expandida */
+        body { background: var(--bg); padding-bottom: 140px; min-height: 100vh; overflow-x: hidden; }
         
         .container { padding: 1.25rem; max-width: 680px; margin: 0 auto; }
         .hidden { display: none !important; }
         
         .header { position: sticky; top: 0; z-index: 200; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 2.5px solid var(--border); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
         
-        /* FIX V36: Navegación Scrollable y Responsive */
+        /* FIX V37: Navegación Elite 'Magnetic Scroll' & Glassmorphism */
         .nav { 
             position: fixed; 
             bottom: 0; 
             left: 0; 
             width: 100%; 
-            background: #000000; 
-            padding: 8px 12px; 
+            background: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 25px; 
             display: flex; 
-            gap: 10px; 
+            gap: 12px; 
             z-index: 500; 
-            justify-content: flex-start; /* Permite el flujo desde el inicio */
-            overflow-x: auto; /* Scroll horizontal */
-            white-space: nowrap; /* Evita que los items bajen */
-            -webkit-overflow-scrolling: touch; /* Sabor mobile suave */
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.2);
-            scrollbar-width: none; /* Ocultar scrollbar Firefox */
+            justify-content: flex-start;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory; /* Efecto Magnético */
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            /* Máscara de Desvanecimiento (Fading) */
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
         }
-        .nav::-webkit-scrollbar { display: none; } /* Ocultar scrollbar Chrome/Safari */
+        .nav::-webkit-scrollbar { display: none; }
         
         .nav-item { 
-            padding: 10px 14px; 
+            padding: 10px 18px; 
             border-radius: 24px; 
             color: #94A3B8; 
             font-size: 0.65rem; 
@@ -55,10 +60,16 @@
             cursor: pointer; 
             border: none; 
             background: transparent; 
-            transition: 0.2s; 
-            flex-shrink: 0; /* Evita que los botones se achiquen */
+            transition: 0.3s; 
+            flex-shrink: 0;
+            scroll-snap-align: center; /* Snap al centro */
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .nav-item.active { background: var(--accent); color: #fff; }
+        .nav-item.active { background: var(--accent); color: #fff; transform: scale(1.05); }
+        
+        /* Highlight AGREGAR */
+        .nav-add { border: 1.5px solid var(--accent) !important; color: #fff !important; font-weight: 900 !important; font-size: 0.75rem !important; }
 
         .card { background: var(--card); border: 2.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); position: relative; }
         .card-title { font-size: 0.7rem; font-weight: 900; color: var(--border); text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 0.5px; }
@@ -69,8 +80,7 @@
         .input, .select { width: 100%; height: 3.5rem; border-radius: 12px; border: 2px solid #E2E8F0; padding: 0 1rem; font-size: 0.95rem; margin-bottom: 1.2rem; outline: none; background: #fff; }
         .input:focus { border-color: var(--accent); }
 
-        /* TABLAS RESPONSIVAS V36 */
-        .table-wrap { width: 100%; overflow-x: auto; border: 2.5px solid var(--border); border-radius: 16px; background: #fff; -webkit-overflow-scrolling: touch; }
+        .table-wrap { width: 100%; overflow-x: auto; border: 2.5px solid var(--border); border-radius: 16px; background: #fff; }
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; min-width: 500px; }
         th { text-align: left; padding: 1rem 0.6rem; background: #F1F5F9; border-bottom: 2.5px solid var(--border); font-weight: 900; }
         td { padding: 0.8rem 0.6rem; border-bottom: 1px solid #F1F5F9; font-weight: 700; }
@@ -78,7 +88,6 @@
         @media (max-width: 600px) {
             table { font-size: 0.65rem; }
             td, th { padding: 0.7rem 0.4rem; }
-            .container { padding: 1rem; }
             .card { padding: 1rem; }
         }
 
@@ -163,27 +172,14 @@
             <div class="card"><div class="card-title">📑 BITÁCORA CASA</div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>DESCRIPCIÓN</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead><tbody id="casa-log-body"></tbody></table></div></div>
         </section>
 
-        <!-- COMPRAS -->
-        <section id="v-save" class="view hidden">
-            <div class="card" style="border:2.5px solid #8B5CF6;">
-                <div class="card-title" style="color:#8B5CF6;">🛍️ Wishlist ISALIFER</div>
-                <input type="text" id="s-nombre" class="input" placeholder="¿Qué comprar?">
-                <input type="number" id="s-costo" class="input" placeholder="Costo Estimado S/">
-                <select id="s-prioridad" class="select"><option value="Alta">Prioridad: Alta</option><option value="Media">Prioridad: Media</option><option value="Baja">Prioridad: Baja</option></select>
-                <input type="date" id="s-f-tentativa" class="input">
-                <button class="btn-main" style="background:#8B5CF6;" onclick="savePriorityPurchase()">AGREGAR</button>
-            </div>
-            <div id="wishlist-ui"></div>
-        </section>
-
         <!-- AGREGAR -->
         <section id="v-load" class="view hidden">
             <div class="card">
-                <div class="card-title">➕ AGREGAR</div>
+                <div class="card-title">➕ AGREGAR MOVIMIENTO</div>
                 <div style="display:flex; gap:6px; margin-bottom:1.5rem; background:#F1F5F9; padding:6px; border-radius:18px;">
-                    <button class="nav-item active" style="flex:1;" onclick="setT('gastovariable',this)">Variable</button>
-                    <button class="nav-item" style="flex:1;" onclick="setT('gastofijo',this)">Fijo</button>
-                    <button class="nav-item" style="flex:1;" onclick="setT('ingreso',this)">Ingreso</button>
+                    <button class="nav-item active" style="flex:1; scroll-snap-align:none; text-transform:none;" onclick="setT('gastovariable',this)">Variable</button>
+                    <button class="nav-item" style="flex:1; scroll-snap-align:none; text-transform:none;" onclick="setT('gastofijo',this)">Fijo</button>
+                    <button class="nav-item" style="flex:1; scroll-snap-align:none; text-transform:none;" onclick="setT('ingreso',this)">Ingreso</button>
                 </div>
                 <input type="number" id="in-monto" class="input" placeholder="0.00" style="font-size:3.2rem; font-weight:900; text-align:center; height:5.5rem; border:3px solid #8B5CF6;">
                 <label style="font-size:0.6rem; font-weight:800; margin-bottom:4px; display:block;">CATEGORÍA</label>
@@ -196,10 +192,7 @@
             </div>
         </section>
 
-        <!-- TC / DEUDAS / REPORTES / LOG -->
-        <section id="v-cc" class="view hidden"><div class="card"><div class="card-title">⚡ DIFERIDOS (TC)</div><input type="number" id="cc-monto" class="input" placeholder="Monto S/"><select id="cc-tarjeta" class="select"></select><input type="text" id="cc-concepto" class="input" placeholder="Concepto"><input type="date" id="cc-fecha" class="input"><button class="btn-main" style="background:#8B5CF6;" onclick="saveCCPurchase()">PROGRAMAR</button></div><div id="cc-history-ui"></div></section>
-        <section id="v-cred" class="view hidden"><div class="card" style="border:2.5px solid #EF4444;"><div class="card-title">🛡️ VINCULAR DEUDA</div><input type="text" id="d-banco" class="input" placeholder="Banco / Marca"><input type="number" id="d-tea" class="input" placeholder="TEA %"><input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/"><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="d-cierre" class="input" placeholder="Día Cierre"><input type="number" id="d-pago" class="input" placeholder="Día Pago"></div><button class="btn-main" onclick="saveDebt()">VINCULAR</button></div><div id="debt-ranking-ui"></div><div class="card"><div class="card-title">📅 Timeline (1-31)</div><div id="gantt-ui"></div></div></section>
-        <section id="v-reports" class="view hidden"><div class="card"><div class="card-title">📈 Balance Mensual Familiar</div><div style="height:320px;"><canvas id="repBalanceChart"></canvas></div></div><div class="card"><div class="card-title">📊 Margen Neto</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div></section>
+        <!-- LOG -->
         <section id="v-hist" class="view hidden">
             <div class="card">
                 <div class="card-title">📊 Log Detallado</div>
@@ -207,29 +200,49 @@
                     <input type="text" id="h-search" class="input" placeholder="🔍 Buscar..." oninput="renderH()" style="margin:0; height:2.8rem;">
                     <select id="h-type" class="select" onchange="renderH()" style="margin:0; height:2.8rem;"><option value="all">TODOS</option><option value="gastovariable">Variable</option><option value="gastofijo">Fijo</option><option value="ingreso">Ingreso</option></select>
                 </div>
-                <div class="table-wrap"><table id="log-table"><thead><tr><th>FECHA</th><th>CAT.</th><th>SUBCAT.</th><th>DESC.</th><th style="text-align:right;">S/</th><th style="text-align:center;">X</th></tr></thead><tbody id="h-body"></tbody></table></div>
+                <div class="table-wrap"><table><thead><tr><th>FECHA</th><th>CAT.</th><th>SUBCAT.</th><th>DESC.</th><th style="text-align:right;">S/</th><th style="text-align:center;">X</th></tr></thead><tbody id="h-body"></tbody></table></div>
             </div>
         </section>
+
+        <!-- COMPRAS -->
+        <section id="v-save" class="view hidden">
+            <div class="card" style="border:2.5px solid #8B5CF6;">
+                <div class="card-title" style="color:#8B5CF6;">🛍️ Wishlist ISALIFER</div>
+                <input type="text" id="s-nombre" class="input" placeholder="¿Qué comprar?">
+                <input type="number" id="s-costo" class="input" placeholder="Costo Estimado S/">
+                <select id="s-prioridad" class="select"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select>
+                <input type="date" id="s-f-tentativa" class="input">
+                <button class="btn-main" style="background:#8B5CF6;" onclick="savePriorityPurchase()">AGREGAR</button>
+            </div>
+            <div id="wishlist-ui"></div>
+        </section>
+
+        <!-- TC / DEUDAS / REPORTES / BUDGET -->
+        <section id="v-cc" class="view hidden"><div class="card"><div class="card-title">⚡ DIFERIDOS (TC)</div><input type="number" id="cc-monto" class="input" placeholder="Monto S/"><select id="cc-tarjeta" class="select"></select><input type="text" id="cc-concepto" class="input" placeholder="Concepto"><input type="date" id="cc-fecha" class="input"><button class="btn-main" style="background:#8B5CF6;" onclick="saveCCPurchase()">PROGRAMAR</button></div><div id="cc-history-ui"></div></section>
+        <section id="v-cred" class="view hidden"><div class="card" style="border:2.5px solid #EF4444;"><div class="card-title">🛡️ VINCULAR DEUDA</div><input type="text" id="d-banco" class="input" placeholder="Banco / Marca"><input type="number" id="d-tea" class="input" placeholder="TEA %"><input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/"><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="d-cierre" class="input" placeholder="Cierre"><input type="number" id="d-pago" class="input"></div><button class="btn-main" onclick="saveDebt()">VINCULAR</button></div><div id="debt-ranking-ui"></div><div class="card"><div class="card-title">📅 Timeline (1-31)</div><div id="gantt-ui"></div></div></section>
+        <section id="v-reports" class="view hidden"><div class="card"><div class="card-title">📈 Balance Mensual Familiar</div><div style="height:320px;"><canvas id="repBalanceChart"></canvas></div></div><div class="card"><div class="card-title">📊 Margen Neto</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div></section>
+        <section id="v-budget" class="view hidden"><div class="card"><div class="card-title">🎯 Control de Presupuestos</div><div id="budget-ui"></div></div></section>
     </main>
 
     <nav class="nav hidden" id="ui-nav">
         <button class="nav-item active" onclick="nav('v-dash',this)">Dash</button>
+        <button class="nav-item nav-add" onclick="nav('v-load',this)">AGREGAR</button>
         <button class="nav-item" onclick="nav('v-casa',this)">CASA</button>
-        <button class="nav-item" onclick="nav('v-save',this)">Compras</button>
-        <button class="nav-item" onclick="nav('v-load',this)">AGREGAR</button>
+        <button class="nav-item" onclick="nav('v-hist',this)">Log</button>
         <button class="nav-item" onclick="nav('v-cc',this)">TC</button>
         <button class="nav-item" onclick="nav('v-cred',this)">Deudas</button>
         <button class="nav-item" onclick="nav('v-reports',this)">Reportes</button>
-        <button class="nav-item" onclick="nav('v-hist',this)">Log</button>
+        <button class="nav-item" onclick="nav('v-save',this)">Compras</button>
+        <button class="nav-item" onclick="nav('v-budget',this)">Presup.</button>
     </nav>
 
 <script>
     const SB_URL = "https://dzzkzcnfmnbrhgepevgc.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6emt6Y25mbW5icmhnZXBldmdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NTMzNzcsImV4cCI6MjA5MTUyOTM3N30.yebN-xF2bFGUG9M7GAAsOPWuRZXmhVUCqXygiYWSJ6o";
     const sb = supabase.createClient(SB_URL, SB_KEY);
-    const MESS = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+    const MESS = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
 
-    let user = null, txs = [], debts = [], wishlist = [];
+    let user = null, txs = [], debts = [], wishlist = [], dbBudgets = [];
     let pChart, bChart, rBalChart, rMarChart;
 
     const MASTER_CATS = {
@@ -243,19 +256,20 @@
 
     sb.auth.onAuthStateChange((event, session) => {
         if (session) { user = session.user; initUI(); } 
-        else { document.getElementById('login-screen').classList.remove('hidden'); ['ui-header','ui-main','ui-nav'].forEach(id => document.getElementById(id).classList.add('hidden')); }
+        else { document.getElementById('login-screen').classList.remove('hidden'); ['ui-header','ui-main','ui-nav'].forEach(x => document.getElementById(x).classList.add('hidden')); }
     });
 
     async function handleLogin() { await sb.auth.signInWithPassword({ email: document.getElementById('log-email').value, password: document.getElementById('log-pass').value }); }
     async function handleLogout() { await sb.auth.signOut(); }
 
-    function initUI() { document.getElementById('login-screen').classList.add('hidden'); ['ui-header','ui-main','ui-nav'].forEach(id => document.getElementById(id).classList.remove('hidden')); document.getElementById('user-tag').textContent = user.email.includes('lilibeth') ? "LILI" : "ISAAC"; setT('gastovariable', null); sync(); }
+    function initUI() { document.getElementById('login-screen').classList.add('hidden'); ['ui-header','ui-main','ui-nav'].forEach(x => document.getElementById(x).classList.remove('hidden')); document.getElementById('user-tag').textContent = user.email.includes('lilibeth') ? "LILI" : "ISAAC"; setT('gastovariable', null); sync(); }
 
     async function sync() {
         const { data: t } = await sb.from('transactions').select('*').order('date', {ascending:false});
         const { data: d } = await sb.from('debts').select('*');
         const { data: w } = await sb.from('future_purchases').select('*');
-        txs = t || []; debts = d || []; wishlist = w || [];
+        const { data: b } = await sb.from('budgets').select('*');
+        txs = t || []; debts = d || []; wishlist = w || []; dbBudgets = b || [];
         renderAll();
     }
 
@@ -285,7 +299,7 @@
         document.getElementById('casa-log-body').innerHTML = cT.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.descripcion || t.categoria}</td><td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
 
         const sim = document.getElementById('calc-tarjeta'); if(sim) sim.innerHTML = debts.map(d => `<option value="${d.tea}">${d.banco_marca}</option>`).join('');
-        renderCharts(fT); renderD(); renderG(); renderH(); renderS();
+        renderCharts(fT); renderD(); renderG(); renderH(); renderS(); renderBudgets(fT);
     }
 
     async function handleSave(event) {
@@ -298,8 +312,7 @@
             const acc = document.getElementById('in-acc').value;
             const f = document.getElementById('in-fecha').value || new Date().toISOString().split('T')[0];
             const d = document.getElementById('in-desc').value;
-            const sEl = document.getElementById('in-subcat');
-            const sub = sEl ? sEl.value : "";
+            const sEl = document.getElementById('in-subcat'); const sub = sEl ? sEl.value : "";
             if(!m) throw new Error("Monto inválido");
             const t = MASTER_CATS.ingreso.includes(c) ? 'ingreso' : (MASTER_CATS.gastofijo.includes(c) ? 'gastofijo' : 'gastovariable');
             const p = { monto: t === 'ingreso' ? m : -m, categoria: c, subcategoria: sub, tipo: t, cuenta_usuario_id: user.id, account: acc, date: f, descripcion: d };
@@ -313,8 +326,7 @@
         const btn = document.getElementById('btn-save-casa');
         const ot = btn.textContent; btn.textContent = "⌛..."; btn.disabled = true;
         try {
-            const m = parseFloat(document.getElementById('ca-monto').value);
-            const d = document.getElementById('ca-desc').value;
+            const m = parseFloat(document.getElementById('ca-monto').value); const d = document.getElementById('ca-desc').value;
             if(!m) throw new Error("Monto vacío");
             await sb.from('transactions').insert([{ monto: -m, descripcion: d, date: new Date().toISOString().split('T')[0], tipo: 'interno', categoria: 'Diario Casa', account: 'Lili', cuenta_usuario_id: user.id }]);
             sync();
@@ -352,12 +364,13 @@
 
     async function savePriorityPurchase() { const p = { item_nombre: document.getElementById('s-nombre').value, costo_estimado: parseFloat(document.getElementById('s-costo').value), prioridad: document.getElementById('s-prioridad').value, fecha_tentativa: document.getElementById('s-f-tentativa').value, usuario_id: user.id }; await sb.from('future_purchases').insert([p]); sync(); }
     async function deleteWish(id) { await sb.from('future_purchases').delete().eq('id',id); sync(); }
-    function nav(id, el) { if(!el || !document.getElementById(id)) return; document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); }
+    function nav(id, el) { if(!el || !document.getElementById(id)) return; document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
     function updateSubCats() { const cat = document.getElementById('in-cat').value; const wrap = document.getElementById('subcat-wrap'); const cont = document.getElementById('subcat-container'); let d_ = STATIC_SUBS[cat] || null; if(cat === '💳 Tarjetas de crédito') d_ = debts.map(d => d.banco_marca); if (d_) { wrap.classList.remove('hidden'); cont.innerHTML = `<select id="in-subcat" class="select">${d_.map(s => `<option value="${s}">${s}</option>`).join('')}</select>`; } else { wrap.classList.add('hidden'); cont.innerHTML = ""; } }
-    function renderH() { const q = document.getElementById('h-search').value.toLowerCase(); const t = document.getElementById('h-type').value; let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria.substring(0,10)}</td><td>${(x.subcategoria||'').substring(0,8)}</td><td>${(x.descripcion||'').substring(0,12)}</td><td style="text-align:right; color:${x.monto > 0 ? 'var(--emerald)':'var(--danger)'}">${Math.abs(x.monto).toFixed(0)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">X</button></td></tr>`); }
+    function renderH() { const q = document.getElementById('h-search').value.toLowerCase(); const t = document.getElementById('h-type').value; let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria.substring(0,10)}</td><td>${(x.subcategoria||'')}</td><td>${(x.descripcion||'')}</td><td style="text-align:right; color:${x.monto > 0 ? 'var(--emerald)':'var(--danger)'}">${Math.abs(x.monto).toFixed(0)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">X</button></td></tr>`).join(''); }
     function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let ds = ""; for(let i=1; i<=31; i++) { let st = i <= d.dia_cierre ? "background:var(--billing-cycle);" : "background:var(--safe-zone);"; if(i === d.dia_pago) st = "background:var(--danger); scale:0.8; border-radius:50%;"; ds += `<div style="flex:1; height:30px; border-right:1px solid rgba(0,0,0,0.05); ${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:900; margin-top:12px;">${d.banco_marca}</div><div class="gantt-master">${ds}</div>`; }).join(''); }
     function renderD() { document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `<div class="card" style="border-left:5px solid ${d.tea > 80 ? 'var(--danger)':'var(--accent)'}"><div style="display:flex; justify-content:space-between;"><strong>${d.banco_marca}</strong><div style="text-align:right;">TEA: ${d.tea}%<br>Cuota: S/ ${d.cuota_mensual}</div></div></div>`).join(''); }
+    function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); const mX = b.monto_quincenal; const over = g > mX; return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${over?'⚠️ ':''}${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${mX}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/mX)*100,100)}%; background:${over?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
     function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value); const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; const n = parseInt(document.getElementById('calc-cuotas').value); if(!m || !tea || !n) return; const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,n))/(Math.pow(1+tem,n)-1); document.getElementById('calc-res').textContent = `CUOTA ESTIMADA: S/ ${c.toFixed(2)}`; }
     async function saveDebt() { await sb.from('debts').insert([{ banco_marca: document.getElementById('d-banco').value, tea: parseFloat(document.getElementById('d-tea').value), cuota_mensual: parseFloat(document.getElementById('d-cuota').value), titular_id: user.id }]); sync(); }
     async function saveCCPurchase() { await sb.from('card_consumptions').insert([{ monto: parseFloat(document.getElementById('cc-monto').value), concepto: document.getElementById('cc-concepto').value, tarjeta_id: document.getElementById('cc-tarjeta').value, cuenta_usuario_id: user.id }]); sync(); }
@@ -366,3 +379,4 @@
 </script>
 </body>
 </html>
+
