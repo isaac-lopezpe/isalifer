@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V23.5 - LOGIN PRO Y EDICIÓN TOTAL</title>
+    <title>SISTEMA ISALIFER V23.8 - AUDITORÍA COMPLETA</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -125,7 +125,7 @@
                 </div>
             </div>
             <div class="card"><div class="card-title">🎯 Gestión de Presupuestos Tácticos</div><div id="budget-ui"></div></div>
-            <div class="card"><div class="card-title">📌 Compromisos Mensuales</div><div id="budget-fixed-ui"></div></div>
+            <div class="card"><div class="card-title">📊 Resumen por Categorías</div><div id="ui-summary-cats"></div></div>
         </section>
 
         <!-- VISTA REPORTES -->
@@ -243,7 +243,15 @@
         <section id="v-hist" class="view hidden">
             <div class="card">
                 <div class="card-title">📊 Log Mensual Detallado</div>
-                <input type="text" id="h-search" class="input" placeholder="🔍 Filtrar registros..." oninput="renderH()">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:1rem;">
+                    <input type="text" id="h-search" class="input" placeholder="🔍 Buscar..." oninput="renderH()" style="margin-bottom:0;">
+                    <select id="h-type" class="select" onchange="renderH()" style="margin-bottom:0;">
+                        <option value="all">Todo</option>
+                        <option value="gastovariable">Var.</option>
+                        <option value="gastofijo">Fijo</option>
+                        <option value="ingreso">Ingr.</option>
+                    </select>
+                </div>
                 <div class="table-wrap">
                     <table>
                         <thead><tr><th onclick="sortH('date')">FECHA</th><th>CATEGORÍA</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead>
@@ -384,6 +392,30 @@
         const nextM = new Date(new Date().setMonth(new Date().getMonth()+1)).toISOString().substring(0,7);
         const def = ccData.filter(x => x.fecha_pago_estimada.startsWith(nextM)).reduce((s,x) => s + parseFloat(x.monto), 0);
         document.getElementById('ui-deferred').textContent = `S/ ${def.toLocaleString('en-US',{minimumFractionDigits:2})}`;
+        
+        // Summary Detallado por Categorías
+        const sums = { ingress: {}, fixed: {}, variable: {} };
+        fT.forEach(t => {
+            if(t.tipo === 'ingreso') sums.ingress[t.categoria] = (sums.ingress[t.categoria]||0) + parseFloat(t.monto);
+            else if(t.tipo === 'gastofijo') sums.fixed[t.categoria] = (sums.fixed[t.categoria]||0) + parseFloat(t.monto);
+            else sums.variable[t.categoria] = (sums.variable[t.categoria]||0) + parseFloat(t.monto);
+        });
+
+        let sHtml = "";
+        [['ingress','INGRESOS','var(--emerald)'],['fixed','EGRESOS FIJOS','var(--accent)'],['variable','EGRESOS VARIABLES','var(--danger)']].forEach(([key, label, color]) => {
+            const cats = Object.keys(sums[key]);
+            if(cats.length > 0) {
+                sHtml += `<div style="font-weight:900; font-size:0.75rem; margin-top:15px; border-bottom:2px solid ${color}; padding-bottom:5px; color:${color}">${label}</div>`;
+                cats.sort((a,b) => sums[key][b] - sums[key][a]).forEach(c => {
+                    sHtml += `<div style="display:flex; justify-content:space-between; font-size:0.7rem; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+                        <span>${c}</span>
+                        <span style="font-weight:900;">S/ ${sums[key][c].toLocaleString('en-US',{minimumFractionDigits:2})}</span>
+                    </div>`;
+                });
+            }
+        });
+        document.getElementById('ui-summary-cats').innerHTML = sHtml || "<p style='font-size:0.75rem; opacity:0.6; text-align:center;'>Sin actividad en el periodo.</p>";
+
         renderCharts(fT); renderD(); renderG(); renderS(); renderH(fT); renderBudgets(fT); renderCCHistory(); renderReports();
         const cTrj = document.getElementById('calc-tarjeta'); if(cTrj) cTrj.innerHTML = debts.map(d => `<option value="${d.tea}">${d.banco_marca}</option>`).join('');
     }
@@ -508,8 +540,13 @@
 
     function renderH(fT) {
         const q = document.getElementById('h-search').value.toLowerCase();
-        let f = (fT || txs).filter(t => t.categoria.toLowerCase().includes(q) || (t.descripcion && t.descripcion.toLowerCase().includes(q)));
-        f.sort((a,b) => (a[hSort.k] < b[hSort.k] ? -1 : 1) * hSort.d);
+        const typeFltr = document.getElementById('h-type').value;
+        let f = (fT || txs).filter(t => {
+            const matchesTxt = t.categoria.toLowerCase().includes(q) || (t.descripcion && t.descripcion.toLowerCase().includes(q));
+            const matchesType = typeFltr === 'all' || t.tipo === typeFltr;
+            return matchesTxt && matchesType;
+        });
+        f.sort((a,b) => (a.date < b.date ? 1 : -1));
         document.getElementById('h-body').innerHTML = f.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.categoria.substring(0,18)}<br><small style="color:#64748b">${t.descripcion || ''}</small></td><td style="text-align:right; color:${t.tipo==='ingreso'?'var(--emerald)':'var(--danger)'}">S/ ${parseFloat(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="editTx('${t.id}')">✏️</button><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
     }
 
@@ -569,4 +606,4 @@
     function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value); const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; const n = parseInt(document.getElementById('calc-cuotas').value); const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,n))/(Math.pow(1+tem,n)-1); document.getElementById('calc-res').innerHTML = `CUOTA MENSUAL ESTIMADA: S/ ${c.toFixed(2)}`; }
 </script>
 </body>
-</html>    
+</html>
