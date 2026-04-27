@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V34.2 - AJUSTE QUIRÚRGICO</title>
+    <title>SISTEMA ISALIFER V35.0 - OPTIMIZACIÓN DE BALANCE</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,8 +14,7 @@
             --bg: #FFFFFF; --card: #FFFFFF; --border: #334155; --text: #000000;
             --accent: #8B5CF6; --isaac: #8B5CF6; --lili: #DB2777; --emerald: #10B981; 
             --danger: #EF4444; --radius-lg: 20px; --shadow: 0 4px 12px rgba(0,0,0,0.1);
-            --safe-zone: rgba(139, 92, 246, 0.1);
-            --billing-cycle: #F8FAFC;
+            --safe-zone: rgba(139, 92, 246, 0.1); --billing-cycle: #F8FAFC;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; color: var(--text); }
         body { background: var(--bg); padding-bottom: 110px; min-height: 100vh; overflow-x: hidden; }
@@ -39,7 +38,7 @@
         .table-wrap { overflow-x: auto; border: 2.5px solid var(--border); border-radius: 16px; background: #fff; }
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; min-width: 550px; }
         th { text-align: left; padding: 1rem 0.6rem; background: #F1F5F9; border-bottom: 2.5px solid var(--border); font-weight: 900; }
-        td { padding: 0.8rem 0.6rem; border-bottom: 1px solid #F1F5F9; font-weight: 700; vertical-align: top; }
+        td { padding: 0.8rem 0.6rem; border-bottom: 1px solid #F1F5F9; font-weight: 700; }
         .btn-icon { background: #F1F5F9; border: 1.5px solid var(--border); padding: 6px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; }
 
         .budget-bar { height: 16px; background: #F1F5F9; border-radius: 10px; overflow: hidden; margin: 8px 0; border: 1.5px solid #e2e8f0; }
@@ -115,12 +114,12 @@
         <section id="v-casa" class="view hidden">
             <div class="card" style="border:3px solid #DB2777; background:#FFF1F2;">
                 <div class="card-title" style="color:#DB2777;">🏠 GESTIÓN DIARIO CASA</div>
-                <p style="font-size:0.75rem; color:#DB2777; font-weight:700; margin-bottom:1.5rem; line-height:1.4;">Control de gastos del hogar y aportes internos.</p>
+                <p style="font-size:0.75rem; color:#DB2777; font-weight:700; margin-bottom:1.2rem; line-height:1.4;">Acá podrás registrar los gastos que haces de manera personal o para la casa.</p>
                 <div>
                     <p style="font-size:0.6rem; font-weight:900; color:#DB2777; opacity:0.7;">SALDO ACTUAL DISPONIBLE</p>
                     <h2 id="casa-saldo" style="font-size:2.8rem; font-weight:900; color:#DB2777;">S/ 0.00</h2>
                 </div>
-                <div class="card-title" style="font-size:0.6rem; color:#DB2777; margin-top:1.5rem; margin-bottom:0.8rem;">REGISTRAR MOVIMIENTO</div>
+                <div class="card-title" style="font-size:0.6rem; color:#DB2777; margin-top:1.5rem; margin-bottom:0.8rem;">REGISTRAR GASTO</div>
                 <input type="number" id="ca-monto" class="input" placeholder="Monto S/" style="height:3rem;">
                 <input type="text" id="ca-desc" class="input" placeholder="Descripción" style="height:3rem;">
                 <button class="btn-main" style="background:#DB2777;" onclick="saveGastoCasa()">REGISTRAR</button>
@@ -172,9 +171,11 @@
             <div class="card" style="border: 2.5px solid #EF4444;">
                 <div class="card-title" style="color:#EF4444;">🛡️ VINCULAR NUEVA DEUDA</div>
                 <input type="text" id="d-banco" class="input" placeholder="Banco / Marca">
+                <input type="number" id="d-tea" class="input" placeholder="TEA %">
+                <input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <input type="number" id="d-tea" class="input" placeholder="TEA %">
-                    <input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/">
+                    <input type="number" id="d-cierre" class="input" placeholder="Día Cierre">
+                    <input type="number" id="d-pago" class="input" placeholder="Día Pago">
                 </div>
                 <button class="btn-main" onclick="saveDebt()">VINCULAR DEUDA</button>
             </div>
@@ -184,7 +185,7 @@
 
         <!-- REPORTES -->
         <section id="v-reports" class="view hidden">
-            <div class="card"><div class="card-title">📈 Balance Mensual Familiar (Triple Barra)</div><div style="height:320px;"><canvas id="repBalanceChart"></canvas></div></div>
+            <div class="card"><div class="card-title">📈 Balance Mensual Familiar (Pro Comparativo)</div><div style="height:350px;"><canvas id="repBalanceChart"></canvas></div></div>
             <div class="card"><div class="card-title">📊 Margen Neto</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div>
         </section>
 
@@ -258,8 +259,7 @@
         document.getElementById('login-screen').classList.add('hidden');
         ['ui-header','ui-main','ui-nav'].forEach(id => document.getElementById(id).classList.remove('hidden'));
         document.getElementById('user-tag').textContent = user.email.includes('lilibeth') ? "LILI" : "ISAAC";
-        setT('gastovariable', null);
-        sync();
+        setT('gastovariable', null); sync();
     }
 
     async function sync() {
@@ -273,18 +273,18 @@
 
     function renderAll() {
         if (!txs) return;
-        const range = { start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], end: new Date(new Date().getFullYear(), new Date().getMonth(), 31).toISOString().split('T')[0] }; 
-        if(document.getElementById('time-filter').value === 'all') { range.start = "2020-01-01"; range.end = "2030-12-31"; }
+        const r = { start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], end: new Date(new Date().getFullYear(), new Date().getMonth(), 31).toISOString().split('T')[0] }; 
+        if(document.getElementById('time-filter').value === 'all') { r.start = "2020-01-01"; r.end = "2030-12-31"; }
 
-        // AJUSTE V34.2 EXCLUSIÓN ABSOLUTA
-        const fT = txs.filter(t => t.date >= range.start && t.date <= range.end && t.tipo !== 'interno' && t.categoria !== '🏠 Aporte Diario Casa');
+        // EXCLUSIÓN ABSOLUTA V35
+        const fT = txs.filter(t => t.date >= r.start && t.date <= r.end && t.tipo !== 'interno' && t.categoria !== '🏠 Aporte Diario Casa');
         
-        let tI = 0, tF = 0, tV = 0; const sums = { ing: {}, fix: {}, var: {} };
+        let tI = 0, tF = 0, tV = 0; const s = { ing: {}, fix: {}, var: {} };
         fT.forEach(t => {
             const v = Math.abs(parseFloat(t.monto));
-            if(t.tipo === 'ingreso') { sums.ing[t.categoria] = (sums.ing[t.categoria]||0) + v; tI += v; }
-            else if(t.tipo === 'gastofijo') { sums.fix[t.categoria] = (sums.fix[t.categoria]||0) + v; tF += v; }
-            else { sums.var[t.categoria] = (sums.var[t.categoria]||0) + v; tV += v; }
+            if(t.tipo === 'ingreso') { s.ing[t.categoria] = (s.ing[t.categoria]||0) + v; tI += v; }
+            else if(t.tipo === 'gastofijo') { s.fix[t.categoria] = (s.fix[t.categoria]||0) + v; tF += v; }
+            else { s.var[t.categoria] = (s.var[t.categoria]||0) + v; tV += v; }
         });
 
         document.getElementById('ui-survival').textContent = `S/ ${(tI - tF - tV).toLocaleString('en-US',{minimumFractionDigits:2})}`;
@@ -293,43 +293,48 @@
         [['ing','INGRESOS', tI, 'var(--emerald)'],['fix','EGRESOS FIJOS', tF, 'var(--accent)'],['var','EGRESOS VARIABLES', tV, 'var(--danger)']].forEach(([k,l,val,clr]) => {
             if(val > 0) {
               sHtml += `<div style="display:flex; justify-content:space-between; font-weight:900; font-size:0.75rem; margin-top:15px; border-bottom:2px solid ${clr}; padding-bottom:4px; color:${clr}"><span>${l}</span><span>S/ ${val.toLocaleString()}</span></div>`;
-              Object.keys(sums[k]).sort((a,b)=>sums[k][b]-sums[k][a]).forEach(c => sHtml += `<div style="display:flex; justify-content:space-between; font-size:0.7rem; padding:6px 0; border-bottom:1px solid #f8fafc;"><span>${c}</span><span style="font-weight:900;">S/ ${sums[k][c].toLocaleString()}</span></div>`);
+              Object.keys(s[k]).sort((a,b)=>s[k][b]-s[k][a]).forEach(c => sHtml += `<div style="display:flex; justify-content:space-between; font-size:0.7rem; padding:6px 0; border-bottom:1px solid #f8fafc;"><span>${c}</span><span style="font-weight:900;">S/ ${s[k][c].toLocaleString()}</span></div>`);
             }
         });
         document.getElementById('ui-summary-cats').innerHTML = sHtml || "<p style='text-align:center; opacity:0.6; padding:20px;'>Sin datos externos.</p>";
 
         // SALDO CASA
-        const casaT = txs.filter(t => t.tipo === 'interno' || (t.tipo === 'ingreso' && t.account === 'Lili')).sort((a,b)=> a.date < b.date ? 1 : -1);
-        const apor = casaT.filter(t => t.monto > 0).reduce((s,t) => s + parseFloat(t.monto), 0);
-        const gast = casaT.filter(t => t.monto < 0).reduce((s,t) => s + Math.abs(t.monto), 0);
-        document.getElementById('casa-saldo').textContent = `S/ ${(apor - gast).toLocaleString('en-US',{minimumFractionDigits:2})}`;
-        document.getElementById('casa-log-body').innerHTML = casaT.map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.descripcion || t.categoria}</td><td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
+        const cT = txs.filter(t => t.tipo === 'interno' || (t.tipo === 'ingreso' && t.account === 'Lili')).sort((a,b)=> a.date < b.date ? 1 : -1);
+        const a_ = cT.filter(t => t.monto > 0).reduce((s,t) => s + parseFloat(t.monto), 0);
+        const g_ = cT.filter(t => t.monto < 0).reduce((s,t) => s + Math.abs(t.monto), 0);
+        document.getElementById('casa-saldo').textContent = `S/ ${(a_ - g_).toLocaleString('en-US',{minimumFractionDigits:2})}`;
+        document.getElementById('casa-log-body').innerHTML = cT.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.descripcion || t.categoria}</td><td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
 
-        // SIMULADOR
-        const sim = document.getElementById('calc-tarjeta');
-        if(sim) sim.innerHTML = debts.map(d => `<option value="${d.tea}">${d.banco_marca}</option>`).join('');
+        const sim = document.getElementById('calc-tarjeta'); if(sim) sim.innerHTML = debts.map(d => `<option value="${d.tea}">${d.banco_marca}</option>`).join('');
 
         renderCharts(fT); renderD(); renderG(); renderCCHistory(); renderBudgets(fT); renderH();
     }
 
     function renderCharts(fT) { 
-        const ctxP = document.getElementById('pieChart').getContext('2d'); if(pChart) pChart.destroy(); const pD = {}; fT.filter(t => t.tipo === 'gastovariable').forEach(t => { const c = t.categoria.substring(0,8); pD[c] = (pD[c] || 0) + Math.abs(parseFloat(t.monto)); }); 
+        const ctxP = document.getElementById('pieChart').getContext('2d'); if(pChart) pChart.destroy();
+        const pD = {}; fT.filter(t => t.tipo === 'gastovariable').forEach(t => { const c = t.categoria.substring(0,8); pD[c] = (pD[c] || 0) + Math.abs(parseFloat(t.monto)); });
         pChart = new Chart(ctxP, { type:'doughnut', data:{ labels:Object.keys(pD), datasets:[{data:Object.values(pD), backgroundColor:['#8B5CF6','#EF4444','#10B981','#F59E0B']}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}}); 
-        const ctxB = document.getElementById('burnChart').getContext('2d'); if(bChart) bChart.destroy(); const dI = [0,0,0,0,0,0,0], dL = [0,0,0,0,0,0,0]; fT.filter(t => t.tipo === 'gastovariable').slice(0,30).forEach(t => { const d = new Date(t.date).getDay(); const idx = d === 0 ? 6 : d - 1; if(t.account === 'Isaac') dI[idx]+=Math.abs(parseFloat(t.monto)); else dL[idx]+=Math.abs(parseFloat(t.monto)); }); 
+        
+        const ctxB = document.getElementById('burnChart').getContext('2d'); if(bChart) bChart.destroy();
+        const dI = Array(7).fill(0), dL = Array(7).fill(0);
+        fT.filter(t => t.tipo === 'gastovariable').slice(0,40).forEach(t => { const d = new Date(t.date).getDay(); const i = (d === 0 ? 6 : d - 1); if(t.account === 'Isaac') dI[i]+=Math.abs(t.monto); else dL[i]+=Math.abs(t.monto); });
         bChart = new Chart(ctxB, { type:'bar', data:{ labels:['L','M','M','J','V','S','D'], datasets:[{label:'Isaac',data:dI,backgroundColor:'#8B5CF6'},{label:'Lili',data:dL,backgroundColor:'#DB2777'}] }, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true}},plugins:{legend:{display:false}}} }); 
     }
 
     function renderReports() {
         if (!txs) return;
         const curY = new Date().getFullYear(); const dM = {}; for(let i=0; i<12; i++) dM[`${curY}-${String(i+1).padStart(2,'0')}`] = { i:0, ef:0, ev:0 };
-        // AJUSTE V34.2 EXCLUSIÓN ABSOLUTA EN REPORTES
         txs.filter(x => x.tipo !== 'interno' && x.categoria !== '🏠 Aporte Diario Casa').forEach(t => {
-            const m = t.date.substring(0,7);
-            if(dM[m]) { const v = Math.abs(t.monto); if(t.tipo === 'ingreso') dM[m].i += v; else if(t.tipo === 'gastofijo') dM[m].ef += v; else dM[m].ev += v; }
+            const m = t.date.substring(0,7); if(dM[m]) { const v = Math.abs(t.monto); if(t.tipo === 'ingreso') dM[m].i += v; else if(t.tipo === 'gastofijo') dM[m].ef += v; else dM[m].ev += v; }
         });
         const lbs = Object.keys(dM).sort();
         const ctxB = document.getElementById('repBalanceChart').getContext('2d'); if(rBalChart) rBalChart.destroy();
-        rBalChart = new Chart(ctxB, { type:'bar', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Ingresos',data:lbs.map(l=>dM[l].i),backgroundColor:'#10B981'},{label:'G.Var',data:lbs.map(l=>dM[l].ev),backgroundColor:'#DB2777'},{label:'G.Fijo',data:lbs.map(l=>dM[l].ef),backgroundColor:'#EF4444'}] }, options:{responsive:true,maintainAspectRatio:false}});
+        rBalChart = new Chart(ctxB, { type:'bar', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [
+            {label:'Ingresos Reales',data:lbs.map(l=>dM[l].i),backgroundColor:'#10B981',stack:'s0'},
+            {label:'G.Variable',data:lbs.map(l=>dM[l].ev),backgroundColor:'#EF4444',stack:'s1'},
+            {label:'G.Fijo',data:lbs.map(l=>dM[l].ef),backgroundColor:'#111827',stack:'s1'}
+        ]}, options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true},x:{stacked:true}}}});
+        
         const ctxM = document.getElementById('repMarginChart').getContext('2d'); if(rMarChart) rMarChart.destroy();
         rMarChart = new Chart(ctxM, { type:'line', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Utilidad',data:lbs.map(l=>dM[l].i-dM[l].ef-dM[l].ev),borderColor:'#8B5CF6',fill:true,backgroundColor:'rgba(139, 92, 246,0.1)'}] }, options:{responsive:true,maintainAspectRatio:false}});
     }
@@ -350,12 +355,10 @@
         const cat = document.getElementById('in-cat').value;
         const wrap = document.getElementById('subcat-wrap');
         const cont = document.getElementById('subcat-container');
-        let dyn = STATIC_SUBS[cat] || null;
-        if(cat === '💳 Tarjetas de crédito') dyn = debts.map(d => d.banco_marca);
-        if (dyn) {
-            wrap.classList.remove('hidden');
-            cont.innerHTML = `<select id="in-subcat" class="select">${dyn.map(s => `<option value="${s}">${s}</option>`).join('')}</select>`;
-        } else { wrap.classList.add('hidden'); cont.innerHTML = ""; }
+        let d_ = STATIC_SUBS[cat] || null;
+        if(cat === '💳 Tarjetas de crédito') d_ = debts.map(d => d.banco_marca);
+        if (d_) { wrap.classList.remove('hidden'); cont.innerHTML = `<select id="in-subcat" class="select">${d_.map(s => `<option value="${s}">${s}</option>`).join('')}</select>`; } 
+        else { wrap.classList.add('hidden'); cont.innerHTML = ""; }
     }
 
     async function handleSave() {
@@ -367,7 +370,7 @@
             const mir = { monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' };
             await sb.from('transactions').insert([p, mir]);
         } else { await sb.from('transactions').insert([p]); }
-        sync(); alert("Bóveda Sincronizada");
+        sync(); alert("Sincronizado");
     }
 
     async function saveGastoCasa() {
