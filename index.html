@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V35.0 - OPTIMIZACIÓN DE BALANCE</title>
+    <title>SISTEMA ISALIFER V35.1 - RESTAURACIÓN COMPRAS</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -114,7 +114,6 @@
         <section id="v-casa" class="view hidden">
             <div class="card" style="border:3px solid #DB2777; background:#FFF1F2;">
                 <div class="card-title" style="color:#DB2777;">🏠 GESTIÓN DIARIO CASA</div>
-                <p style="font-size:0.75rem; color:#DB2777; font-weight:700; margin-bottom:1.2rem; line-height:1.4;">Acá podrás registrar los gastos que haces de manera personal o para la casa.</p>
                 <div>
                     <p style="font-size:0.6rem; font-weight:900; color:#DB2777; opacity:0.7;">SALDO ACTUAL DISPONIBLE</p>
                     <h2 id="casa-saldo" style="font-size:2.8rem; font-weight:900; color:#DB2777;">S/ 0.00</h2>
@@ -127,6 +126,23 @@
             <div class="card"><div class="card-title">📑 BITÁCORA CASA</div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>DESCRIPCIÓN</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead><tbody id="casa-log-body"></tbody></table></div></div>
         </section>
 
+        <!-- COMPRAS (SAVE) -->
+        <section id="v-save" class="view hidden">
+            <div class="card" style="border:2.5px solid #8B5CF6;">
+                <div class="card-title" style="color:#8B5CF6;">🛍️ Wishlist ISALIFER</div>
+                <input type="text" id="s-nombre" class="input" placeholder="¿Qué quieres comprar?">
+                <input type="number" id="s-costo" class="input" placeholder="Costo Estimado S/">
+                <select id="s-prioridad" class="select">
+                    <option value="Alta">Prioridad: Alta</option>
+                    <option value="Media">Prioridad: Media</option>
+                    <option value="Baja">Prioridad: Baja</option>
+                </select>
+                <input type="date" id="s-f-tentativa" class="input">
+                <button class="btn-main" style="background:#8B5CF6;" onclick="savePriorityPurchase()">AGREGAR A PRIORIDADES</button>
+            </div>
+            <div id="wishlist-ui"></div>
+        </section>
+
         <!-- AGREGAR -->
         <section id="v-load" class="view hidden">
             <div class="card">
@@ -137,15 +153,9 @@
                     <button class="nav-item" style="flex:1;" onclick="setT('ingreso',this)">Ingreso</button>
                 </div>
                 <input type="number" id="in-monto" class="input" placeholder="0.00" style="font-size:3.2rem; font-weight:900; text-align:center; height:5.5rem; border:3px solid #8B5CF6;">
-                
                 <label style="font-size:0.6rem; font-weight:800; margin-bottom:4px; display:block;">CATEGORÍA</label>
                 <select id="in-cat" class="select" onchange="updateSubCats()"></select>
-                
-                <div id="subcat-wrap" class="hidden">
-                    <label style="font-size:0.6rem; font-weight:800; margin-bottom:4px; display:block;">SUBCATEGORÍA</label>
-                    <div id="subcat-container"></div>
-                </div>
-
+                <div id="subcat-wrap" class="hidden"><label style="font-size:0.6rem; font-weight:800; margin-bottom:4px; display:block;">SUBCATEGORÍA</label><div id="subcat-container"></div></div>
                 <select id="in-acc" class="select"><option>Isaac</option><option>Lili</option></select>
                 <input type="date" id="in-fecha" class="input">
                 <input type="text" id="in-desc" class="input" placeholder="Descripción/Detalles">
@@ -153,70 +163,17 @@
             </div>
         </section>
 
-        <!-- TC -->
-        <section id="v-cc" class="view hidden">
-            <div class="card" style="border:2.5px solid #8B5CF6;">
-                <div class="card-title" style="color:#8B5CF6;">⚡ PROGRAMAR CARGO DIFERIDO (TC)</div>
-                <input type="number" id="cc-monto" class="input" placeholder="Monto S/">
-                <select id="cc-tarjeta" class="select"></select>
-                <input type="text" id="cc-concepto" class="input" placeholder="Concepto">
-                <input type="date" id="cc-fecha" class="input">
-                <button class="btn-main" style="background:#8B5CF6;" onclick="saveCCPurchase()">PROGRAMAR CARGO</button>
-            </div>
-            <div id="cc-history-ui"></div>
-        </section>
-
-        <!-- DEUDAS -->
-        <section id="v-cred" class="view hidden">
-            <div class="card" style="border: 2.5px solid #EF4444;">
-                <div class="card-title" style="color:#EF4444;">🛡️ VINCULAR NUEVA DEUDA</div>
-                <input type="text" id="d-banco" class="input" placeholder="Banco / Marca">
-                <input type="number" id="d-tea" class="input" placeholder="TEA %">
-                <input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <input type="number" id="d-cierre" class="input" placeholder="Día Cierre">
-                    <input type="number" id="d-pago" class="input" placeholder="Día Pago">
-                </div>
-                <button class="btn-main" onclick="saveDebt()">VINCULAR DEUDA</button>
-            </div>
-            <div id="debt-ranking-ui"></div>
-            <div class="card"><div class="card-title">📅 Gantt Maestro (1-31)</div><div id="gantt-ui"></div></div>
-        </section>
-
-        <!-- REPORTES -->
-        <section id="v-reports" class="view hidden">
-            <div class="card"><div class="card-title">📈 Balance Mensual Familiar (Pro Comparativo)</div><div style="height:350px;"><canvas id="repBalanceChart"></canvas></div></div>
-            <div class="card"><div class="card-title">📊 Margen Neto</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div>
-        </section>
-
-        <!-- LOG -->
-        <section id="v-hist" class="view hidden">
-            <div class="card">
-                <div class="card-title">📊 Log Detallado</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:8px; margin-bottom:1rem;">
-                    <input type="text" id="h-search" class="input" placeholder="🔍 Buscar..." oninput="renderH()" style="margin:0; height:2.8rem;">
-                    <select id="h-type" class="select" onchange="renderH()" style="margin:0; height:2.8rem;">
-                        <option value="all">Tipos (TODOS)</option>
-                        <option value="gastovariable">Var.</option>
-                        <option value="gastofijo">Fijo</option>
-                        <option value="ingreso">Ingr.</option>
-                        <option value="interno">Casa</option>
-                    </select>
-                    <select id="h-cat-fltr" class="select" onchange="renderH()" style="margin:0; height:2.8rem;"></select>
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>FECHA</th><th>CATEGORÍA</th><th>SUBCAT.</th><th>DESC.</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead>
-                        <tbody id="h-body"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+        <!-- TC / DEUDAS / REPORTES / LOG -->
+        <section id="v-cc" class="view hidden"><div class="card"><div class="card-title">⚡ PROGRAMAR CARGO DIFERIDO (TC)</div><input type="number" id="cc-monto" class="input" placeholder="Monto S/"><select id="cc-tarjeta" class="select"></select><input type="text" id="cc-concepto" class="input" placeholder="Concepto"><input type="date" id="cc-fecha" class="input"><button class="btn-main" style="background:#8B5CF6;" onclick="saveCCPurchase()">PROGRAMAR CARGO</button></div><div id="cc-history-ui"></div></section>
+        <section id="v-cred" class="view hidden"><div class="card" style="border:2.5px solid #EF4444;"><div class="card-title">🛡️ VINCULAR NUEVA DEUDA</div><input type="text" id="d-banco" class="input" placeholder="Banco / Marca"><input type="number" id="d-tea" class="input" placeholder="TEA %"><input type="number" id="d-cuota" class="input" placeholder="Cuota Mensual S/"><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><input type="number" id="d-cierre" class="input" placeholder="Día Cierre"><input type="number" id="d-pago" class="input" placeholder="Día Pago"></div><button class="btn-main" onclick="saveDebt()">VINCULAR DEUDA</button></div><div id="debt-ranking-ui"></div><div class="card"><div class="card-title">📅 Gantt Maestro (1-31)</div><div id="gantt-ui"></div></div></section>
+        <section id="v-reports" class="view hidden"><div class="card"><div class="card-title">📈 Balance Mensual Familiar (Pro Comparativo)</div><div style="height:350px;"><canvas id="repBalanceChart"></canvas></div></div><div class="card"><div class="card-title">📊 Margen Neto</div><div style="height:220px;"><canvas id="repMarginChart"></canvas></div></div></section>
+        <section id="v-hist" class="view hidden"><div class="card"><div class="card-title">📊 Log Detallado</div><div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:8px; margin-bottom:1rem;"><input type="text" id="h-search" class="input" placeholder="🔍 Buscar..." oninput="renderH()" style="margin:0; height:2.8rem;"><select id="h-type" class="select" onchange="renderH()" style="margin:0; height:2.8rem;"><option value="all">Tipos (TODOS)</option><option value="gastovariable">Var.</option><option value="gastofijo">Fijo</option><option value="ingreso">Ingr.</option><option value="interno">Casa</option></select><select id="h-cat-fltr" class="select" onchange="renderH()" style="margin:0; height:2.8rem;"></select></div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>CATEGORÍA</th><th>SUBCAT.</th><th>DESC.</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead><tbody id="h-body"></tbody></table></div></div></section>
     </main>
 
     <nav class="nav hidden" id="ui-nav">
         <button class="nav-item active" onclick="nav('v-dash',this)">Dash</button>
         <button class="nav-item" onclick="nav('v-casa',this)">CASA</button>
+        <button class="nav-item" onclick="nav('v-save',this)">Compras</button>
         <button class="nav-item" onclick="nav('v-load',this)">AGREGAR</button>
         <button class="nav-item" onclick="nav('v-cc',this)">TC</button>
         <button class="nav-item" onclick="nav('v-cred',this)">Deudas</button>
@@ -230,75 +187,54 @@
     const sb = supabase.createClient(SB_URL, SB_KEY);
     const MESS = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 
-    let user = null, txs = [], debts = [], ccData = [], dbBudgets = [];
+    let user = null, txs = [], debts = [], wishlist = [];
     let pChart, bChart, rBalChart, rMarChart;
 
     const MASTER_CATS = {
-        gastofijo: [
-            '💼 Contador / Servicios profesionales', '🛒 Diario Casa (alimentos, casa base)', '📚 Educación Fer (colegio, cursos, talleres)', '💳 Préstamos y deudas', '🏥 Seguros (salud Lilibeth, Fer, otros)', '💼 Servicios / Software / Suscripciones', '💡 Servicios del hogar (luz, agua, internet)', '🧾 SUNAT (multas, fraccionamiento, impuestos RUC 10)', '💳 Tarjetas de crédito', '📶 Telefonía (celular, línea EE.UU.)', '🏠 Vivienda (alquiler + servicios)', '📦 OTROS'
-        ],
+        gastofijo: ['💼 Contador / Servicios profesionales', '🛒 Diario Casa (alimentos, casa base)', '📚 Educación Fer (colegio, cursos, talleres)', '💳 Préstamos y deudas', '🏥 Seguros (salud Lilibeth, Fer, otros)', '💼 Servicios / Software / Suscripciones', '💡 Servicios del hogar (luz, agua, internet)', '🧾 SUNAT (multas, fraccionamiento, impuestos RUC 10)', '💳 Tarjetas de crédito', '📶 Telefonía (celular, línea EE.UU.)', '🏠 Vivienda (alquiler + servicios)', '📦 OTROS'],
         gastovariable: ['➕ Adicional diario','🍔 Comida','🎁 Regalos','💇 Estética','🛠️ Herramientas','👗 Ropa','🎉 Diversión','💊 Salud','🚕 Taxis','🚌 Transporte'].sort(),
         ingreso: ['🏫 Clases','⚡ Sinapsis','🏢 RentEngine','🏠 Aporte Diario Casa'].sort(),
         interno: ['🏠 Aporte Diario Casa','🛒 Diario Casa','🍳 Cocina','📦 Varios'].sort()
     };
 
-    const STATIC_SUBS = {
-        '💡 Servicios del hogar (luz, agua, internet)': ['Luz', 'Agua', 'Internet', 'Gas', 'Mantenimiento'],
-        '🏥 Seguros (salud Lilibeth, Fer, otros)': ['Lili', 'Fer', 'Vehicular', 'Otros']
-    };
+    const STATIC_SUBS = { '💡 Servicios del hogar (luz, agua, internet)': ['Luz', 'Agua', 'Internet', 'Gas', 'Mantenimiento'], '🏥 Seguros (salud Lilibeth, Fer, otros)': ['Lili', 'Fer', 'Vehicular', 'Otros'] };
 
     sb.auth.onAuthStateChange((event, session) => {
         if (session) { user = session.user; initUI(); } 
         else { document.getElementById('login-screen').classList.remove('hidden'); ['ui-header','ui-main','ui-nav'].forEach(id => document.getElementById(id).classList.add('hidden')); }
     });
 
-    async function handleLogin() { const { data, error } = await sb.auth.signInWithPassword({ email: document.getElementById('log-email').value, password: document.getElementById('log-pass').value }); if (error) alert("Inválido"); }
+    async function handleLogin() { await sb.auth.signInWithPassword({ email: document.getElementById('log-email').value, password: document.getElementById('log-pass').value }); }
     async function handleLogout() { await sb.auth.signOut(); }
 
-    function initUI() {
-        document.getElementById('login-screen').classList.add('hidden');
-        ['ui-header','ui-main','ui-nav'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-        document.getElementById('user-tag').textContent = user.email.includes('lilibeth') ? "LILI" : "ISAAC";
-        setT('gastovariable', null); sync();
-    }
+    function initUI() { document.getElementById('login-screen').classList.add('hidden'); ['ui-header','ui-main','ui-nav'].forEach(id => document.getElementById(id).classList.remove('hidden')); document.getElementById('user-tag').textContent = user.email.includes('lilibeth') ? "LILI" : "ISAAC"; setT('gastovariable', null); sync(); }
 
     async function sync() {
         const { data: t } = await sb.from('transactions').select('*').order('date', {ascending:false});
         const { data: d } = await sb.from('debts').select('*');
-        const { data: cc } = await sb.from('card_consumptions').select('*');
-        const { data: b } = await sb.from('budgets').select('*');
-        txs = t || []; debts = d || []; ccData = cc || []; dbBudgets = b || [];
+        const { data: w } = await sb.from('future_purchases').select('*');
+        txs = t || []; debts = d || []; wishlist = w || [];
         renderAll();
     }
 
     function renderAll() {
-        if (!txs) return;
         const r = { start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], end: new Date(new Date().getFullYear(), new Date().getMonth(), 31).toISOString().split('T')[0] }; 
         if(document.getElementById('time-filter').value === 'all') { r.start = "2020-01-01"; r.end = "2030-12-31"; }
-
-        // EXCLUSIÓN ABSOLUTA V35
         const fT = txs.filter(t => t.date >= r.start && t.date <= r.end && t.tipo !== 'interno' && t.categoria !== '🏠 Aporte Diario Casa');
-        
         let tI = 0, tF = 0, tV = 0; const s = { ing: {}, fix: {}, var: {} };
         fT.forEach(t => {
             const v = Math.abs(parseFloat(t.monto));
             if(t.tipo === 'ingreso') { s.ing[t.categoria] = (s.ing[t.categoria]||0) + v; tI += v; }
-            else if(t.tipo === 'gastofijo') { s.fix[t.categoria] = (s.fix[t.categoria]||0) + v; tF += v; }
+            else if(t.tipo === 'gastofijo') { s.fix[t.categoria] = (s.fix[s.categoria]||0) + v; tF += v; }
             else { s.var[t.categoria] = (s.var[t.categoria]||0) + v; tV += v; }
         });
-
         document.getElementById('ui-survival').textContent = `S/ ${(tI - tF - tV).toLocaleString('en-US',{minimumFractionDigits:2})}`;
         
-        let sHtml = ""; 
-        [['ing','INGRESOS', tI, 'var(--emerald)'],['fix','EGRESOS FIJOS', tF, 'var(--accent)'],['var','EGRESOS VARIABLES', tV, 'var(--danger)']].forEach(([k,l,val,clr]) => {
-            if(val > 0) {
-              sHtml += `<div style="display:flex; justify-content:space-between; font-weight:900; font-size:0.75rem; margin-top:15px; border-bottom:2px solid ${clr}; padding-bottom:4px; color:${clr}"><span>${l}</span><span>S/ ${val.toLocaleString()}</span></div>`;
-              Object.keys(s[k]).sort((a,b)=>s[k][b]-s[k][a]).forEach(c => sHtml += `<div style="display:flex; justify-content:space-between; font-size:0.7rem; padding:6px 0; border-bottom:1px solid #f8fafc;"><span>${c}</span><span style="font-weight:900;">S/ ${s[k][c].toLocaleString()}</span></div>`);
-            }
+        let sHtml = ""; [['ing','INGRESOS', tI, 'var(--emerald)'],['fix','EGRESOS FIJOS', tF, 'var(--accent)'],['var','EGRESOS VARIABLES', tV, 'var(--danger)']].forEach(([k,l,val,clr]) => {
+            if(val > 0) { sHtml += `<div style="display:flex; justify-content:space-between; font-weight:900; font-size:0.75rem; margin-top:15px; border-bottom:2px solid ${clr}; padding-bottom:4px; color:${clr}"><span>${l}</span><span>S/ ${val.toLocaleString()}</span></div>`; Object.keys(s[k]).sort((a,b)=>s[k][b]-s[k][a]).forEach(c => sHtml += `<div style="display:flex; justify-content:space-between; font-size:0.7rem; padding:6px 0; border-bottom:1px solid #f8fafc;"><span>${c}</span><span style="font-weight:900;">S/ ${s[k][c].toLocaleString()}</span></div>`); }
         });
         document.getElementById('ui-summary-cats').innerHTML = sHtml || "<p style='text-align:center; opacity:0.6; padding:20px;'>Sin datos externos.</p>";
 
-        // SALDO CASA
         const cT = txs.filter(t => t.tipo === 'interno' || (t.tipo === 'ingreso' && t.account === 'Lili')).sort((a,b)=> a.date < b.date ? 1 : -1);
         const a_ = cT.filter(t => t.monto > 0).reduce((s,t) => s + parseFloat(t.monto), 0);
         const g_ = cT.filter(t => t.monto < 0).reduce((s,t) => s + Math.abs(t.monto), 0);
@@ -306,19 +242,36 @@
         document.getElementById('casa-log-body').innerHTML = cT.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.descripcion || t.categoria}</td><td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(t.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
 
         const sim = document.getElementById('calc-tarjeta'); if(sim) sim.innerHTML = debts.map(d => `<option value="${d.tea}">${d.banco_marca}</option>`).join('');
+        renderCharts(fT); renderD(); renderG(); renderH(); renderS();
+    }
 
-        renderCharts(fT); renderD(); renderG(); renderCCHistory(); renderBudgets(fT); renderH();
+    function renderS() {
+        const cont = document.getElementById('wishlist-ui');
+        cont.innerHTML = wishlist.map(p => {
+            const clr = p.prioridad === 'Alta' ? 'var(--danger)' : (p.prioridad === 'Media' ? 'var(--accent)' : '#94A3B8');
+            return `<div class="card" style="border-left:6px solid ${clr}">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="flex:1;">
+                        <span style="font-weight:900; font-size:0.9rem;">${p.item_nombre}</span><br>
+                        <span style="font-size:0.65rem; color:#64748B;">Fecha: ${p.fecha_tentativa || '--'} | Prioridad: <strong>${p.prioridad}</strong></span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-weight:900; color:${clr}; font-size:1rem;">S/ ${parseFloat(p.costo_estimado).toFixed(2)}</span><br>
+                        <button class="btn-icon" onclick="deleteWish('${p.id}')">🗑️</button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
     }
 
     function renderCharts(fT) { 
         const ctxP = document.getElementById('pieChart').getContext('2d'); if(pChart) pChart.destroy();
         const pD = {}; fT.filter(t => t.tipo === 'gastovariable').forEach(t => { const c = t.categoria.substring(0,8); pD[c] = (pD[c] || 0) + Math.abs(parseFloat(t.monto)); });
         pChart = new Chart(ctxP, { type:'doughnut', data:{ labels:Object.keys(pD), datasets:[{data:Object.values(pD), backgroundColor:['#8B5CF6','#EF4444','#10B981','#F59E0B']}] }, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}}); 
-        
         const ctxB = document.getElementById('burnChart').getContext('2d'); if(bChart) bChart.destroy();
         const dI = Array(7).fill(0), dL = Array(7).fill(0);
-        fT.filter(t => t.tipo === 'gastovariable').slice(0,40).forEach(t => { const d = new Date(t.date).getDay(); const i = (d === 0 ? 6 : d - 1); if(t.account === 'Isaac') dI[i]+=Math.abs(t.monto); else dL[i]+=Math.abs(t.monto); });
-        bChart = new Chart(ctxB, { type:'bar', data:{ labels:['L','M','M','J','V','S','D'], datasets:[{label:'Isaac',data:dI,backgroundColor:'#8B5CF6'},{label:'Lili',data:dL,backgroundColor:'#DB2777'}] }, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true}},plugins:{legend:{display:false}}} }); 
+        fT.filter(t => t.tipo === 'gastovariable').slice(0,40).forEach(t => { const d = new Date(t.date).getDay(); const idx = d === 0 ? 6 : d - 1; if(t.account === 'Isaac') dI[idx]+=Math.abs(t.monto); else dL[idx]+=Math.abs(t.monto); });
+        bChart = new Chart(ctxB, { type:'bar', data:{ labels:['L','M','M','J','V','S','D'], datasets:[{label:'I',data:dI,backgroundColor:'#8B5CF6'},{label:'L',data:dL,backgroundColor:'#DB2777'}] }, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true}},plugins:{legend:{display:false}}} }); 
     }
 
     function renderReports() {
@@ -329,72 +282,34 @@
         });
         const lbs = Object.keys(dM).sort();
         const ctxB = document.getElementById('repBalanceChart').getContext('2d'); if(rBalChart) rBalChart.destroy();
-        rBalChart = new Chart(ctxB, { type:'bar', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [
-            {label:'Ingresos Reales',data:lbs.map(l=>dM[l].i),backgroundColor:'#10B981',stack:'s0'},
-            {label:'G.Variable',data:lbs.map(l=>dM[l].ev),backgroundColor:'#EF4444',stack:'s1'},
-            {label:'G.Fijo',data:lbs.map(l=>dM[l].ef),backgroundColor:'#111827',stack:'s1'}
-        ]}, options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true},x:{stacked:true}}}});
-        
-        const ctxM = document.getElementById('repMarginChart').getContext('2d'); if(rMarChart) rMarChart.destroy();
-        rMarChart = new Chart(ctxM, { type:'line', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Utilidad',data:lbs.map(l=>dM[l].i-dM[l].ef-dM[l].ev),borderColor:'#8B5CF6',fill:true,backgroundColor:'rgba(139, 92, 246,0.1)'}] }, options:{responsive:true,maintainAspectRatio:false}});
+        rBalChart = new Chart(ctxB, { type:'bar', data: { labels: lbs.map(l => MESS[parseInt(l.split('-')[1])-1]), datasets: [{label:'Ingresos',data:lbs.map(l=>dM[l].i),backgroundColor:'#10B981',stack:'s0'}, {label:'G.Variable',data:lbs.map(l=>dM[l].ev),backgroundColor:'#EF4444',stack:'s1'}, {label:'G.Fijo',data:lbs.map(l=>dM[l].ef),backgroundColor:'#111827',stack:'s1'}]}, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true}}}});
     }
 
-    function renderH() {
-        const q = document.getElementById('h-search').value.toLowerCase();
-        const t = document.getElementById('h-type').value;
-        let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t));
-        document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria}</td><td>${x.subcategoria || '-'}</td><td>${x.descripcion || ''}</td><td style="text-align:right; color:${x.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(x.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">🗑️</button></td></tr>`).join('');
+    async function savePriorityPurchase() {
+        const p = { item_nombre: document.getElementById('s-nombre').value, costo_estimado: parseFloat(document.getElementById('s-costo').value), prioridad: document.getElementById('s-prioridad').value, fecha_tentativa: document.getElementById('s-f-tentativa').value, usuario_id: user.id };
+        await sb.from('future_purchases').insert([p]); sync();
     }
+    async function deleteWish(id) { await sb.from('future_purchases').delete().eq('id',id); sync(); }
 
-    function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let ds = ""; for(let i=1; i<=31; i++) { let st = i <= d.dia_cierre ? "background:var(--billing-cycle);" : "background:var(--safe-zone);"; if(i === d.dia_pago) st = "background:var(--danger); scale:0.8; border-radius:50%;"; ds += `<div style="flex:1; height:30px; border-right:1px solid rgba(0,0,0,0.05); ${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:900; margin-top:12px;">${d.banco_marca}</div><div class="gantt-master">${ds}</div>`; }).join(''); }
-    function renderD() { document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `<div class="card" style="border-left:5px solid ${d.tea > 80 ? 'var(--danger)':'var(--accent)'}"><div style="display:flex; justify-content:space-between;"><strong>${d.banco_marca}</strong><div style="text-align:right;">TEA: ${d.tea}%<br>Cuota: S/ ${d.cuota_mensual}</div></div></div>`).join(''); }
-    function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); const mX = b.monto_quincenal; const over = g > mX; return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${over?'⚠️ ':''}${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${mX}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/mX)*100,100)}%; background:${over?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
-    function renderCCHistory() { document.getElementById('cc-history-ui').innerHTML = ccData.map(c => `<div style="font-size:0.7rem; border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between;"><span>${c.concepto}</span><strong>S/ ${c.monto}</strong></div>`).join(''); }
-
-    function updateSubCats() {
-        const cat = document.getElementById('in-cat').value;
-        const wrap = document.getElementById('subcat-wrap');
-        const cont = document.getElementById('subcat-container');
-        let d_ = STATIC_SUBS[cat] || null;
-        if(cat === '💳 Tarjetas de crédito') d_ = debts.map(d => d.banco_marca);
-        if (d_) { wrap.classList.remove('hidden'); cont.innerHTML = `<select id="in-subcat" class="select">${d_.map(s => `<option value="${s}">${s}</option>`).join('')}</select>`; } 
-        else { wrap.classList.add('hidden'); cont.innerHTML = ""; }
-    }
-
+    function nav(id, el) { if(!el || !document.getElementById(id)) return; document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); }
+    function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
+    function updateSubCats() { const cat = document.getElementById('in-cat').value; const wrap = document.getElementById('subcat-wrap'); const cont = document.getElementById('subcat-container'); let d_ = STATIC_SUBS[cat] || null; if(cat === '💳 Tarjetas de crédito') d_ = debts.map(d => d.banco_marca); if (d_) { wrap.classList.remove('hidden'); cont.innerHTML = `<select id="in-subcat" class="select">${d_.map(s => `<option value="${s}">${s}</option>`).join('')}</select>`; } else { wrap.classList.add('hidden'); cont.innerHTML = ""; } }
     async function handleSave() {
         const m = parseFloat(document.getElementById('in-monto').value), c = document.getElementById('in-cat').value, acc = document.getElementById('in-acc').value, f = document.getElementById('in-fecha').value || new Date().toISOString().split('T')[0], d = document.getElementById('in-desc').value;
         const s = document.getElementById('in-subcat') ? document.getElementById('in-subcat').value : "";
         const t = MASTER_CATS.ingreso.includes(c) ? 'ingreso' : (MASTER_CATS.gastofijo.includes(c) ? 'gastofijo' : 'gastovariable');
         const p = { monto: t === 'ingreso' ? m : -m, categoria: c, subcategoria: s, tipo: t, cuenta_usuario_id: user.id, account: acc, date: f, descripcion: d };
-        if(c === "🛒 Diario Casa (alimentos, casa base)" && acc === "Isaac") {
-            const mir = { monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' };
-            await sb.from('transactions').insert([p, mir]);
-        } else { await sb.from('transactions').insert([p]); }
-        sync(); alert("Sincronizado");
-    }
-
-    async function saveGastoCasa() {
-        const m = parseFloat(document.getElementById('ca-monto').value), d = document.getElementById('ca-desc').value;
-        if(!m) return;
-        await sb.from('transactions').insert([{ monto: -m, descripcion: d, date: new Date().toISOString().split('T')[0], tipo: 'interno', categoria: 'Diario Casa', account: 'Lili', cuenta_usuario_id: user.id }]);
+        if(c === "🛒 Diario Casa (alimentos, casa base)" && acc === "Isaac") { const mir = { monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' }; await sb.from('transactions').insert([p, mir]); } else { await sb.from('transactions').insert([p]); }
         sync();
     }
-
-    function runTacticalCalc() { 
-        const m = parseFloat(document.getElementById('calc-monto').value);
-        const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100;
-        const n = parseInt(document.getElementById('calc-cuotas').value);
-        if(!m || !tea || !n) return;
-        const tem = Math.pow(1+tea, 1/12)-1;
-        const c = (m*tem*Math.pow(1+tem,n))/(Math.pow(1+tem,n)-1);
-        document.getElementById('calc-res').textContent = `CUOTA ESTIMADA: S/ ${c.toFixed(2)}`;
-    }
-
-    function nav(id, el) { if(!el || !document.getElementById(id)) return; document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); }
+    async function saveGastoCasa() { const m = parseFloat(document.getElementById('ca-monto').value), d = document.getElementById('ca-desc').value; await sb.from('transactions').insert([{ monto: -m, descripcion: d, date: new Date().toISOString().split('T')[0], tipo: 'interno', categoria: 'Diario Casa', account: 'Lili', cuenta_usuario_id: user.id }]); sync(); }
+    function renderH() { const q = document.getElementById('h-search').value.toLowerCase(); const t = document.getElementById('h-type').value; let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria}</td><td>${x.subcategoria || '-'}</td><td>${x.descripcion || ''}</td><td style="text-align:right; color:${x.monto > 0 ? 'var(--emerald)':'var(--danger)'}">S/ ${Math.abs(x.monto).toFixed(2)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">🗑️</button></td></tr>`).join(''); }
+    function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let ds = ""; for(let i=1; i<=31; i++) { let st = i <= d.dia_cierre ? "background:var(--billing-cycle);" : "background:var(--safe-zone);"; if(i === d.dia_pago) st = "background:var(--danger); scale:0.8; border-radius:50%;"; ds += `<div style="flex:1; height:30px; border-right:1px solid rgba(0,0,0,0.05); ${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:900; margin-top:12px;">${d.banco_marca}</div><div class="gantt-master">${ds}</div>`; }).join(''); }
+    function renderD() { document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `<div class="card" style="border-left:5px solid ${d.tea > 80 ? 'var(--danger)':'var(--accent)'}"><div style="display:flex; justify-content:space-between;"><strong>${d.banco_marca}</strong><div style="text-align:right;">TEA: ${d.tea}%<br>Cuota: S/ ${d.cuota_mensual}</div></div></div>`).join(''); }
+    function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value); const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; const n = parseInt(document.getElementById('calc-cuotas').value); if(!m || !tea || !n) return; const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,n))/(Math.pow(1+tem,n)-1); document.getElementById('calc-res').textContent = `CUOTA ESTIMADA: S/ ${c.toFixed(2)}`; }
     async function saveDebt() { await sb.from('debts').insert([{ banco_marca: document.getElementById('d-banco').value, tea: parseFloat(document.getElementById('d-tea').value), cuota_mensual: parseFloat(document.getElementById('d-cuota').value), titular_id: user.id }]); sync(); }
     async function saveCCPurchase() { await sb.from('card_consumptions').insert([{ monto: parseFloat(document.getElementById('cc-monto').value), concepto: document.getElementById('cc-concepto').value, tarjeta_id: document.getElementById('cc-tarjeta').value, cuenta_usuario_id: user.id }]); sync(); }
     async function deleteTx(id) { if(confirm("¿Eliminar?")) { await sb.from('transactions').delete().eq('id', id); sync(); } }
-    function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
     function importCSV() { alert("Selecciona CSV."); }
 </script>
