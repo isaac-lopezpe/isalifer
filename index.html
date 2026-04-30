@@ -153,11 +153,11 @@
                 <input type="text" id="cc-concepto" class="input" placeholder="Concepto del consumo">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="number" id="cc-monto" class="input" placeholder="Monto Total S/">
-                    <select id="cc-tarjeta" class="select"></select>
+                    <select id="cc-tarjeta" class="select" onchange="autoEstimateCCPayment()"></select>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <input type="number" id="cc-tot-cuotas" class="input" placeholder="N° Cuotas">
-                    <input type="date" id="cc-fecha-compra" class="input" title="Fecha Compra">
+                    <input type="date" id="cc-fecha-compra" class="input" title="Fecha Compra" onchange="autoEstimateCCPayment()">
                 </div>
                 <input type="date" id="cc-fecha-estimada" class="input" title="Fecha Pago Estimada">
                 <button class="btn-main" style="background:var(--lili);" onclick="saveCCPurchase()">PROGRAMAR CARGO</button>
@@ -189,6 +189,7 @@
                     <input type="number" id="d-facturacion" class="input" placeholder="Día Facturación">
                 </div>
                 <button class="btn-main" style="background:var(--danger);" onclick="saveDebt()">VINCULAR CRÉDITO</button>
+                <p id="debt-status" style="font-size: 0.65rem; color: var(--danger); text-align: center; margin-top: 10px;"></p>
             </div>
             <div class="card"><div class="card-title">🏆 Ranking de Deudas (Fricción TEA)</div><div id="debt-ranking-ui"></div></div>
             <div class="card"><div class="card-title">📅 Gantt Maestro (Vencimientos)</div><div id="gantt-ui"></div></div>
@@ -426,33 +427,81 @@
     }
 
     async function saveDebt() { 
-        const data = {
-            banco_marca: document.getElementById('d-banco').value,
-            tea: parseFloat(document.getElementById('d-tea').value),
-            cuota_mensual: parseFloat(document.getElementById('d-cuota').value),
-            dia_cierre: parseInt(document.getElementById('d-cierre').value),
-            dia_pago: parseInt(document.getElementById('d-pago').value),
-            moneda: document.getElementById('d-moneda').value,
-            total_cuotas: parseInt(document.getElementById('d-total-cuotas').value),
-            cuota_actual: 1,
-            fecha_facturacion: parseInt(document.getElementById('d-facturacion').value),
-            titular_id: user.id
-        };
-        await sb.from('debts').insert([data]); sync(); 
+        try {
+            const data = {
+                nombre: document.getElementById('d-banco').value,
+                banco_marca: document.getElementById('d-banco').value,
+                tea: parseFloat(document.getElementById('d-tea').value) || 0,
+                cuota_mensual: parseFloat(document.getElementById('d-cuota').value) || 0,
+                dia_cierre: parseInt(document.getElementById('d-cierre').value) || 1,
+                dia_pago: parseInt(document.getElementById('d-pago').value) || 1,
+                moneda: document.getElementById('d-moneda').value,
+                total_cuotas: parseInt(document.getElementById('d-total-cuotas').value) || 1,
+                cuota_actual: 1,
+                fecha_facturacion: parseInt(document.getElementById('d-facturacion').value) || 1,
+                titular_id: user.id
+            };
+            
+            if(!data.banco_marca) throw new Error("Nombre del banco obligatorio");
+            
+            const { error } = await sb.from('debts').insert([data]);
+            if(error) throw error;
+            
+            await sync();
+            // Reset form
+            ['d-banco','d-tea','d-cuota','d-cierre','d-pago','d-total-cuotas','d-facturacion'].forEach(id => document.getElementById(id).value = "");
+            alert("Deuda vinculada correctamente");
+        } catch (e) { 
+            console.error(e);
+            alert("Error al registrar deuda: " + e.message); 
+        }
     }
 
     async function saveCCPurchase() { 
-        const data = {
-            monto: parseFloat(document.getElementById('cc-monto').value),
-            concepto: document.getElementById('cc-concepto').value,
-            tarjeta_id: document.getElementById('cc-tarjeta').value,
-            cuotas_totales: parseInt(document.getElementById('cc-tot-cuotas').value),
-            cuota_actual: 1,
-            fecha_compra: document.getElementById('cc-fecha-compra').value,
-            fecha_pago_estimada: document.getElementById('cc-fecha-estimada').value,
-            cuenta_usuario_id: user.id
-        };
-        await sb.from('card_consumptions').insert([data]); sync(); 
+        try {
+            const data = {
+                monto: parseFloat(document.getElementById('cc-monto').value) || 0,
+                concepto: document.getElementById('cc-concepto').value,
+                tarjeta_id: document.getElementById('cc-tarjeta').value,
+                cuotas_totales: parseInt(document.getElementById('cc-tot-cuotas').value) || 1,
+                cuota_actual: 1,
+                fecha_compra: document.getElementById('cc-fecha-compra').value,
+                fecha_pago_estimada: document.getElementById('cc-fecha-estimada').value,
+                cuenta_usuario_id: user.id
+            };
+            if(!data.monto || !data.concepto) throw new Error("Monto y concepto obligatorios");
+            const { error } = await sb.from('card_consumptions').insert([data]);
+            if(error) throw error;
+            await sync(); 
+            ['cc-monto','cc-concepto','cc-tot-cuotas'].forEach(id => document.getElementById(id).value = "");
+            alert("Consumo programado");
+        } catch (e) { alert(e.message); }
+    }
+
+    // AUTO-ESTIMACIÓN DE PAGO TC
+    function autoEstimateCCPayment() {
+        const buyDateStr = document.getElementById('cc-fecha-compra').value;
+        const tarjetaId = document.getElementById('cc-tarjeta').value;
+        if(!buyDateStr || !tarjetaId) return;
+
+        const card = debts.find(d => d.id === tarjetaId);
+        if(!card) return;
+
+        const buyDate = new Date(buyDateStr + 'T12:00:00');
+        const buyDay = buyDate.getDate();
+        let payMonth = buyDate.getMonth();
+        let payYear = buyDate.getFullYear();
+
+        if(buyDay > card.dia_cierre) {
+            // Paga en 2 meses (el mes subsiguiente)
+            payMonth += 2;
+        } else {
+            // Paga el próximo mes
+            payMonth += 1;
+        }
+
+        const estimatedPayDate = new Date(payYear, payMonth, card.dia_pago);
+        document.getElementById('cc-fecha-estimada').value = estimatedPayDate.toISOString().split('T')[0];
     }
 
     async function savePriorityPurchase() { await sb.from('future_purchases').insert([{ item_nombre: document.getElementById('s-nombre').value, costo_estimado: parseFloat(document.getElementById('s-costo').value), prioridad: document.getElementById('s-prioridad').value, fecha_tentativa: document.getElementById('s-fecha').value, usuario_id: user.id }]); sync(); }
@@ -460,7 +509,66 @@
     async function deleteWish(id) { if(confirm("¿Eliminar?")) { await sb.from('future_purchases').delete().eq('id', id); sync(); } }
 
     function renderD() { document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `<div class="card" style="padding:1rem; margin-bottom:0.5rem; border-left:5px solid var(--danger);"><div style="display:flex; justify-content:space-between;"><strong>${d.banco_marca}</strong><span>TEA: ${d.tea}%</span></div></div>`).join(''); }
-    function renderG() { document.getElementById('gantt-ui').innerHTML = debts.map(d => { let ds = ""; for(let i=1; i<=31; i++) { let st = i === d.dia_pago ? "background:var(--danger); scale:0.8; border-radius:50%;" : (i <= d.dia_cierre ? "background:#F8FAFC;" : "background:rgba(139,92,246,0.1);"); ds += `<div style="flex:1; height:30px; border-right:1px solid rgba(0,0,0,0.05); ${st}"></div>`; } return `<div style="font-size:0.6rem; font-weight:900; margin-top:8px;">${d.banco_marca} (Paga: ${d.dia_pago})</div><div style="display:flex; height:20px; border-radius:4px; overflow:hidden; border:1px solid #ddd;">${ds}</div>`; }).join(''); }
+    function renderG() { 
+        const today = new Date();
+        const curDay = today.getDate();
+        const mesesEx = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        
+        // Header de Zona Segura (Badges de resumen)
+        let safeRow = `<div style="display:flex; margin-bottom:10px; align-items:center; background:#f0fdf4; padding:8px; border-radius:8px; border:1.5px solid #bbf7d0;">
+            <div style="width:80px; font-size:0.6rem; font-weight:900; color:#166534;">ESTRATEGIA</div>
+            <div style="flex:1; display:flex; gap:4px; overflow-x:auto;">`;
+        
+        debts.forEach(d => {
+            if(curDay > d.dia_cierre) {
+                safeRow += `<div style="background:#22c55e; color:white; padding:2px 8px; border-radius:12px; font-size:0.55rem; white-space:nowrap; font-weight:900;">${d.banco_marca}: ZONA ELITE ACTIVA</div>`;
+            }
+        });
+        safeRow += `</div></div>`;
+
+        const legend = `<div style="display:flex; justify-content:center; gap:12px; margin-top:15px; font-size:0.6rem; font-weight:800; color:#64748b; padding:8px; background:#F8FAFC; border-radius:8px;">
+            <span>🔴 Pago</span>
+            <span>🟣 Cierre</span>
+            <span><span style="color:#10B981;">●</span> Zona Segura</span>
+            <span>🔲 Hoy</span>
+        </div>`;
+
+        document.getElementById('gantt-ui').innerHTML = safeRow + debts.map(d => { 
+            let ds = ""; 
+            for(let i=0; i<60; i++) { 
+                const date = new Date();
+                date.setDate(today.getDate() + i);
+                const dayNum = date.getDate();
+                const isToday = i === 0;
+                
+                let bg = "background:#F8FAFC;";
+                let color = "color:#94a3b8;";
+                if(dayNum > d.dia_cierre) { bg = "background:rgba(16, 185, 129, 0.12);"; color = "color:#166534;"; }
+                if(dayNum === d.dia_cierre) { bg = "background:var(--accent);"; color = "color:#fff;"; }
+                if(dayNum === d.dia_pago) { bg = "background:var(--danger);"; color = "color:#fff;"; }
+                
+                let border = isToday ? "border: 2px solid #000; z-index: 1;" : "border-right: 1px solid rgba(0,0,0,0.02);";
+                ds += `<div title="${date.toLocaleDateString()}" style="flex:1; height:18px; display:flex; align-items:center; justify-content:center; font-size:0.5rem; font-weight:900; ${bg} ${color} ${border} box-sizing:border-box;">${dayNum}</div>`; 
+            } 
+
+            // CÁLCULOS EXPRESOS V45.5
+            const now = new Date();
+            let closingMonthIdx = now.getMonth();
+            if(now.getDate() > d.dia_cierre) closingMonthIdx++;
+            
+            const mesCierre = mesesEx[closingMonthIdx % 12];
+            const mesPago1 = mesesEx[(closingMonthIdx + 1) % 12];
+            const mesElite = mesesEx[closingMonthIdx % 12];
+            const mesPagoElite = mesesEx[(closingMonthIdx + 2) % 12];
+
+            const insight = `<div style="margin-top:8px; padding:10px; background:rgba(139, 92, 246, 0.04); border-radius:12px; font-size:0.65rem; line-height:1.4; border:1px dashed rgba(139, 92, 246, 0.15);">
+                <p>• Si compras desde hoy hasta el <b>${d.dia_cierre} de ${mesCierre}</b>, pagas el <b>${d.dia_pago} de ${mesPago1}</b>.</p>
+                <p style="margin-top:4px; color:#15803d;">✨ <b>ZONA ELITE:</b> Si compras del <b>${d.dia_cierre + 1} de ${mesElite}</b> en adelante, pagas recién el <b>${d.dia_pago} de ${mesPagoElite}</b>.</p>
+            </div>`;
+
+            return `<div style="font-size:0.65rem; font-weight:900; margin-top:15px; display:flex; justify-content:space-between; align-items:center;"><span>💳 ${d.banco_marca}</span><span style="opacity:0.5;">Fricción: ${d.tea}% TEA</span></div><div style="display:flex; height:18px; border-radius:4px; overflow:hidden; border:1.5px solid #eee; background:#fff;">${ds}</div>${insight}`; 
+        }).join('') + legend; 
+    }
     function renderS() { document.getElementById('wishlist-ui').innerHTML = wishlist.map(p => `<div class="card" style="border-left:6px solid ${p.prioridad==='Alta'?'var(--danger)':'var(--accent)'}"><div style="display:flex; justify-content:space-between;"><div><span style="font-weight:900;">${p.item_nombre}</span><br><span style="font-size:0.6rem; opacity:0.6;">Meta: ${p.fecha_tentativa || 'TBD'}</span></div><div style="text-align:right;"><span style="font-weight:900; color:var(--accent);">S/ ${parseFloat(p.costo_estimado).toFixed(0)}</span><br><button class="btn-icon" style="font-size:1.1rem; margin-top:5px;" onclick="deleteWish('${p.id}')">🗑️</button></div></div></div>`).join(''); }
     function renderCCAgenda() { document.getElementById('cc-agenda-ui').innerHTML = cardCons.map(c => { const t = debts.find(d=>d.id===c.tarjeta_id); return `<div style="display:flex; justify-content:space-between; align-items:center; background:#F8FAFC; padding:10px; margin-bottom:8px; border-radius:12px; font-size:0.75rem;"><div><strong>${c.concepto}</strong> (${t?t.banco_marca:'TC'})<br><span style="opacity:0.6;">Cuota ${c.cuota_actual} de ${c.cuotas_totales}</span></div><strong style="color:var(--lili);">S/ ${(c.monto/c.cuotas_totales).toFixed(2)}</strong></div>`; }).join(''); }
     function renderH() { const q = document.getElementById('h-search').value.toLowerCase(); const t = document.getElementById('h-type').value; let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || x.date.includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria.substring(0,8)}</td><td>${(x.subcategoria||'').substring(0,8)}</td><td>${(x.descripcion||'').substring(0,10)}</td><td style="text-align:right;">${Math.abs(x.monto).toFixed(0)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">🗑️</button></td></tr>`).join(''); }
@@ -469,7 +577,18 @@
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
     function updateSubCats() { const cat = document.getElementById('in-cat').value; document.getElementById('subcat-wrap').classList.toggle('hidden', cat !== '💳 Tarjetas de crédito'); if(cat === '💳 Tarjetas de crédito') document.getElementById('subcat-container').innerHTML = `<select id="in-subcat" class="select">${debts.map(d=>`<option value="${d.banco_marca}">${d.banco_marca}</option>`).join('')}</select>`; }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
-    function runTacticalCalc() { const m = parseFloat(document.getElementById('calc-monto').value); const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; if(!m || !tea) return; const tem = Math.pow(1+tea, 1/12)-1; const c = (m*tem*Math.pow(1+tem,12))/(Math.pow(1+tem,12)-1); document.getElementById('calc-res').textContent = `CUOTA EST: S/ ${c.toFixed(2)}`; }
+    function runTacticalCalc() { 
+        const m = parseFloat(document.getElementById('calc-monto').value); 
+        const tea = parseFloat(document.getElementById('calc-tarjeta').value)/100; 
+        const cuotas = parseInt(document.getElementById('calc-cuotas').value);
+        if(!m || !tea || !cuotas) return; 
+        
+        const tem = Math.pow(1 + tea, 1/12) - 1; 
+        const cBase = (m * tem) / (1 - Math.pow(1 + tem, -cuotas)); 
+        const cFinal = cBase + 2.50; // + Seguro desgravamen est.
+        
+        document.getElementById('calc-res').textContent = `CUOTA EST: S/ ${cFinal.toFixed(2)}`; 
+    }
     function importCSV() { alert("Simulando Importación..."); }
     async function saveBudgetRemote() { const c = document.getElementById('b-cat').value, m = parseFloat(document.getElementById('b-monto').value); await sb.from('budgets').upsert({ categoria: c, monto_quincenal: m, usuario_id: user.id }, { onConflict: 'categoria' }); sync(); }
 </script>
