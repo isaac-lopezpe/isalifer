@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V46.2 - LOG DE ALTA VISIBILIDAD</title>
+    <title>SISTEMA ISALIFER V46.2 - LOG DE ALTA VISIBILIDAD Y DETALLE</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -139,10 +139,25 @@
             <div class="card" style="border:3px solid #DB2777; background:#FFF1F2;">
                 <div class="card-title" style="color:#DB2777;">🏠 DIARIO CASA</div>
                 <h2 id="casa-saldo" style="font-size:2.8rem; font-weight:900; color:#DB2777;">S/ 0.00</h2>
+                
+                <!-- V46.3 Toggle Categoría -->
+                <div style="display:flex; gap:6px; margin-bottom:1.2rem; background:rgba(219, 39, 119, 0.1); padding:6px; border-radius:18px;">
+                    <button id="btn-cat-hogar" class="nav-item active" style="flex:1; font-size:0.65rem; padding:8px;" onclick="setCasaCat('Hogar', this)">🏠 Hogar</button>
+                    <button id="btn-cat-lili" class="nav-item" style="flex:1; font-size:0.65rem; padding:8px;" onclick="setCasaCat('Lili Personal', this)">💄 Lili Personal</button>
+                </div>
+
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="number" id="ca-monto" class="input" placeholder="Monto S/"><input type="date" id="ca-fecha" class="input"></div>
                 <input type="text" id="ca-desc" class="input" placeholder="Descripción">
                 <button class="btn-main" style="background:#DB2777;" onclick="saveGastoCasa()">REGISTRAR GASTO</button>
             </div>
+            
+            <!-- V46.3 Filtros Bitácora -->
+            <div style="display:flex; gap:4px; margin-bottom:10px; overflow-x:auto; padding-bottom:5px;">
+                <button class="nav-item active" style="padding:6px 12px; font-size:0.6rem; border:1px solid #ddd;" onclick="filterCasa('Todos', this)">[Todos]</button>
+                <button class="nav-item" style="padding:6px 12px; font-size:0.6rem; border:1px solid #ddd;" onclick="filterCasa('Hogar', this)">[Hogar]</button>
+                <button class="nav-item" style="padding:6px 12px; font-size:0.6rem; border:1px solid #ddd;" onclick="filterCasa('Lili Personal', this)">[Personal]</button>
+            </div>
+
             <div class="card"><div class="card-title">📑 BITÁCORA CASA</div><div class="table-wrap"><table><thead><tr><th>FECHA</th><th>DESC</th><th style="text-align:right;">MONTO</th><th style="text-align:center;">ACC.</th></tr></thead><tbody id="casa-log-body"></tbody></table></div></div>
         </section>
 
@@ -259,6 +274,8 @@
     let user = null, txs = [], debts = [], wishlist = [], dbBudgets = [], cardCons = [];
     let pChart, bChart, lChart, rBalChart, rMarChart;
     let editingDebtId = null;
+    let currentCasaCat = 'Hogar'; // V46.3
+    let currentCasaFilter = 'Todos'; // V46.3
 
     const MASTER_CATS = {
         gastofijo: ['💼 Contador / Servicios profesionales', '🛒 Diario Casa (alimentos, casa base)', '📚 Educación Fer (colegio, cursos, talleres)', '💳 Préstamos y deudas', '🏥 Seguros (salud Lilibeth, Fer, otros)', '💼 Servicios / Software / Suscripciones', '💡 Servicios del hogar (luz, agua, internet)', '🧾 SUNAT (multas, fraccionamiento, impuestos RUC 10)', '💳 Tarjetas de crédito', '📶 Telefonía (celular, línea EE.UU.)', '🏠 Vivienda (alquiler + servicios)', '📦 OTROS'],
@@ -334,7 +351,25 @@
 
         const cT = txs.filter(t => (t.account === 'Lili' && t.tipo === 'ingreso') || t.tipo === 'interno').sort((a,b)=> a.date < b.date ? 1 : -1);
         document.getElementById('casa-saldo').textContent = `S/ ${cT.reduce((s,t)=>s+parseFloat(t.monto),0).toLocaleString('en-US',{minimumFractionDigits:2})}`;
-        document.getElementById('casa-log-body').innerHTML = cT.slice(0,30).map(t => `<tr><td>${t.date.slice(5)}</td><td>${t.descripcion || t.categoria}</td><td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">${Math.abs(t.monto).toFixed(0)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${t.id}')">🗑️</button></td></tr>`).join('');
+        
+        // V46.3 Filtrado Bitácora Casa
+        const cFiltered = cT.filter(t => currentCasaFilter === 'Todos' || t.categoria === currentCasaFilter || (currentCasaFilter === 'Hogar' && t.categoria === 'Diario Casa'));
+        
+        document.getElementById('casa-log-body').innerHTML = cFiltered.slice(0,40).map(t => {
+            const isLili = t.categoria === 'Lili Personal';
+            const icon = isLili ? '👗' : '🏠';
+            const iconStyle = isLili ? 'color:#DB2777;' : 'color:#64748B; opacity:0.7;';
+            
+            return `<tr>
+                <td>${t.date.slice(5)}</td>
+                <td>${t.descripcion || t.categoria}</td>
+                <td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">${Math.abs(t.monto).toFixed(0)}</td>
+                <td style="text-align:center;">
+                    <span style="${iconStyle} font-size:1rem; margin-right:5px;">${icon}</span>
+                    <button class="btn-icon" style="font-size:0.8rem;" onclick="deleteTx('${t.id}')">🗑️</button>
+                </td>
+            </tr>`;
+        }).join('');
 
         const sim = document.getElementById('cc-tarjeta'); if(sim) sim.innerHTML = debts.map(d => `<option value="${d.id}">${d.banco_marca}</option>`).join('');
         const calcSim = document.getElementById('calc-tarjeta'); if(calcSim) calcSim.innerHTML = debts.map(d => `<option value="${d.tea}">${d.banco_marca}</option>`).join('');
@@ -422,9 +457,29 @@
         try {
             const m = parseFloat(document.getElementById('ca-monto').value); const d = document.getElementById('ca-desc').value; const f = document.getElementById('ca-fecha').value;
             if(!m) throw new Error("Monto vacío");
-            await sb.from('transactions').insert([{ monto: -m, descripcion: d, date: f, tipo: 'interno', categoria: 'Diario Casa', account: 'Lili', cuenta_usuario_id: user.id }]);
+            await sb.from('transactions').insert([{ monto: -m, descripcion: d, date: f, tipo: 'interno', categoria: currentCasaCat, account: 'Lili', cuenta_usuario_id: user.id }]);
+            
+            // Reset V46.3 Form Selection
+            currentCasaCat = 'Hogar';
+            document.getElementById('btn-cat-hogar').parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-cat-hogar').classList.add('active');
+
             await sync(); document.getElementById('ca-monto').value = ""; document.getElementById('ca-desc').value = "";
         } catch (e) { alert(e.message); }
+    }
+
+    // V46.3 Helper Functions
+    function setCasaCat(cat, el) {
+        currentCasaCat = cat;
+        el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function filterCasa(cat, el) {
+        currentCasaFilter = cat;
+        el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        renderAll();
     }
 
     async function saveDebt() { 
@@ -676,5 +731,6 @@
 </script>
 </body>
 </html>
+
 
 
