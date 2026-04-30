@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V46.1 - SINCRONIZACIÓN DE PRIORIDADES</title>
+    <title>SISTEMA ISALIFER V46.2 - LOG DE ALTA VISIBILIDAD</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -625,7 +625,35 @@
     }
     function renderS() { document.getElementById('wishlist-ui').innerHTML = wishlist.map(p => `<div class="card" style="border-left:6px solid ${p.prioridad==='Alta'?'var(--danger)':'var(--accent)'}"><div style="display:flex; justify-content:space-between;"><div><span style="font-weight:900;">${p.item_nombre}</span><br><span style="font-size:0.6rem; opacity:0.6;">Meta: ${p.fecha_tentativa || 'TBD'}</span></div><div style="text-align:right;"><span style="font-weight:900; color:var(--accent);">S/ ${parseFloat(p.costo_estimado).toFixed(0)}</span><br><button class="btn-icon" style="font-size:1.1rem; margin-top:5px;" onclick="deleteWish('${p.id}')">🗑️</button></div></div></div>`).join(''); }
     function renderCCAgenda() { document.getElementById('cc-agenda-ui').innerHTML = cardCons.map(c => { const t = debts.find(d=>d.id===c.tarjeta_id); return `<div style="display:flex; justify-content:space-between; align-items:center; background:#F8FAFC; padding:10px; margin-bottom:8px; border-radius:12px; font-size:0.75rem;"><div><strong>${c.concepto}</strong> (${t?t.banco_marca:'TC'})<br><span style="opacity:0.6;">Cuota ${c.cuota_actual} de ${c.cuotas_totales}</span></div><strong style="color:var(--lili);">S/ ${(c.monto/c.cuotas_totales).toFixed(2)}</strong></div>`; }).join(''); }
-    function renderH() { const q = document.getElementById('h-search').value.toLowerCase(); const t = document.getElementById('h-type').value; let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || x.date.includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); document.getElementById('h-body').innerHTML = d.slice(0,50).map(x => `<tr><td>${x.date.slice(5)}</td><td>${x.categoria.substring(0,8)}</td><td>${(x.subcategoria||'').substring(0,8)}</td><td>${(x.descripcion||'').substring(0,10)}</td><td style="text-align:right;">${Math.abs(x.monto).toFixed(0)}</td><td style="text-align:center;"><button class="btn-icon" onclick="deleteTx('${x.id}')">🗑️</button></td></tr>`).join(''); }
+    function renderH() { 
+        const q = document.getElementById('h-search').value.toLowerCase(); 
+        const t = document.getElementById('h-type').value; 
+        let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || x.date.includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); 
+        
+        document.getElementById('h-body').innerHTML = d.slice(0,100).map(x => `
+            <tr onclick="showTxDetail('${x.id}')" style="cursor:pointer;">
+                <td style="font-size:0.6rem;">${x.date.slice(5)}</td>
+                <td style="font-size:0.6rem; font-weight:700;">${x.categoria}</td>
+                <td style="font-size:0.55rem; opacity:0.8;">${x.subcategoria || ''}</td>
+                <td style="font-size:0.55rem; opacity:0.8;">${x.descripcion || ''}</td>
+                <td style="text-align:right; font-weight:900; font-size:0.75rem;">
+                    ${Math.abs(x.monto).toFixed(0)}
+                    <span style="display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:4px; background:${x.account==='Isaac'?'var(--accent)':'var(--lili)'};"></span>
+                </td>
+                <td style="text-align:center;"><button class="btn-icon" onclick="event.stopPropagation(); deleteTx('${x.id}')">🗑️</button></td>
+            </tr>`).join(''); 
+    }
+
+    function showTxDetail(id) {
+        const tx = txs.find(t => t.id === id);
+        if(!tx) return;
+        alert(`DETALLE DE TRANSACCIÓN\n\n` +
+              `💰 MONTO: S/ ${Math.abs(tx.monto).toFixed(2)}\n` +
+              `📅 FECHA: ${tx.date}\n` +
+              `📁 CATEGORÍA: ${tx.categoria}\n` +
+              `👤 CUENTA: ${tx.account}\n` +
+              `📝 DESCRIPCIÓN: ${tx.descripcion || 'Sin descripción'}`);
+    }
     function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${b.monto_quincenal}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/b.monto_quincenal)*100,100)}%; background:${g>b.monto_quincenal?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
     function nav(id, el) { document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); el.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' }); }
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
