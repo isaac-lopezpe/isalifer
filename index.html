@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V46.2 - LOG DE ALTA VISIBILIDAD Y DETALLE</title>
+    <title>SISTEMA ISALIFER V47.3 - Control de Errores y Edición Maestra</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
     <style>
@@ -136,9 +137,20 @@
 
         <!-- MÓDULO CASA -->
         <section id="v-casa" class="view hidden">
+            <p style="font-size:0.6rem; color:#64748b; font-weight:600; margin-bottom:8px; background:#f1f5f9; padding:4px 8px; border-radius:4px;">Recordatorio: Sólo registrar lo que has gastado con lo recibido por Diario Casa o por tu trabajo.</p>
             <div class="card" style="border:3px solid #DB2777; background:#FFF1F2;">
-                <div class="card-title" style="color:#DB2777;">🏠 DIARIO CASA</div>
-                <h2 id="casa-saldo" style="font-size:2.8rem; font-weight:900; color:#DB2777;">S/ 0.00</h2>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div class="card-title" style="color:#DB2777;">🏠 DIARIO CASA</div>
+                        <h2 id="casa-saldo" style="font-size:2.8rem; font-weight:900; color:#DB2777;">S/ 0.00</h2>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="card-title" style="color:#DB2777; font-size:0.55rem; opacity:0.8;">Gastado Hoy</div>
+                        <div id="ui-casa-today" style="font-size:1rem; font-weight:800; color:#DB2777;">S/ 0.00</div>
+                    </div>
+                </div>
+                
+                <div id="mirror-warning" class="hidden" style="background:#fff7ed; border:1.5px solid #fed7aa; color:#c2410c; padding:8px; border-radius:8px; font-size:0.65rem; font-weight:700; margin-bottom:12px;">⚠️ Posible doble registro: Isaac ya registró un monto igual hoy.</div>
                 
                 <!-- V46.3 Toggle Categoría -->
                 <div style="display:flex; gap:6px; margin-bottom:1.2rem; background:rgba(219, 39, 119, 0.1); padding:6px; border-radius:18px;">
@@ -146,9 +158,9 @@
                     <button id="btn-cat-lili" class="nav-item" style="flex:1; font-size:0.65rem; padding:8px;" onclick="setCasaCat('Lili Personal', this)">💄 Lili Personal</button>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="number" id="ca-monto" class="input" placeholder="Monto S/"><input type="date" id="ca-fecha" class="input"></div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="number" id="ca-monto" class="input" placeholder="Monto S/" oninput="checkMirror(this.value)"><input type="date" id="ca-fecha" class="input" onchange="checkMirror(document.getElementById('ca-monto').value)"></div>
                 <input type="text" id="ca-desc" class="input" placeholder="Descripción">
-                <button class="btn-main" style="background:#DB2777;" onclick="saveGastoCasa()">REGISTRAR GASTO</button>
+                <button id="btn-save-casa" class="btn-main" style="background:#DB2777;" onclick="saveGastoCasa()">REGISTRAR GASTO</button>
             </div>
             
             <!-- V46.3 Filtros Bitácora -->
@@ -211,14 +223,15 @@
         </section>
 
         <section id="v-load" class="view hidden">
+            <p style="font-size:0.6rem; color:#64748b; font-weight:600; margin-bottom:8px; background:#f1f5f9; padding:4px 8px; border-radius:4px;">Recordatorio: Sólo registrar lo que has gastado con lo recibido por Diario Casa o por tu trabajo.</p>
             <div class="card">
-                <div class="card-title">➕ AGREGAR MOVIMIENTO</div>
-                <div style="display:flex; gap:6px; margin-bottom:1.2rem; background:#F1F5F9; padding:6px; border-radius:18px;"><button class="nav-item active" style="flex:1; color:var(--text);" onclick="setT('gastovariable',this)">Variable</button><button class="nav-item" style="flex:1; color:var(--text);" onclick="setT('gastofijo',this)">Fijo</button><button class="nav-item" style="flex:1; color:var(--text);" onclick="setT('ingreso',this)">Ingreso</button></div>
+                <div class="card-title" id="load-title">➕ AGREGAR MOVIMIENTO</div>
+                <div style="display:flex; gap:6px; margin-bottom:1.2rem; background:#F1F5F9; padding:6px; border-radius:18px;"><button id="btn-t-var" class="nav-item active" style="flex:1; color:var(--text);" onclick="setT('gastovariable',this)">Variable</button><button id="btn-t-fix" class="nav-item" style="flex:1; color:var(--text);" onclick="setT('gastofijo',this)">Fijo</button><button id="btn-t-ing" class="nav-item" style="flex:1; color:var(--text);" onclick="setT('ingreso',this)">Ingreso</button></div>
                 <input type="number" id="in-monto" class="input" placeholder="0.00" style="font-size:3.2rem; font-weight:900; text-align:center; height:5rem; border:3px solid #8B5CF6;">
                 <select id="in-cat" class="select" onchange="updateSubCats()"></select>
                 <div id="subcat-wrap" class="hidden"><div id="subcat-container"></div></div>
                 <select id="in-acc" class="select"><option>Isaac</option><option>Lili</option></select>
-                <input type="date" id="in-fecha" class="input"><input type="text" id="in-desc" class="input" placeholder="Descripción"><button class="btn-main" onclick="handleSave(event)">SINCRONIZAR BÚNKER</button>
+                <input type="date" id="in-fecha" class="input"><input type="text" id="in-desc" class="input" placeholder="Descripción"><button id="btn-save-main" class="btn-main" onclick="handleSave(event)">SINCRONIZAR BÚNKER</button>
             </div>
         </section>
 
@@ -274,6 +287,9 @@
     let user = null, txs = [], debts = [], wishlist = [], dbBudgets = [], cardCons = [];
     let pChart, bChart, lChart, rBalChart, rMarChart;
     let editingDebtId = null;
+    let editingTxId = null; // V47.0
+    let editingCasaId = null; // V47.0
+    let editingBudgetId = null; // V47.0
     let currentCasaCat = 'Hogar'; // V46.3
     let currentCasaFilter = 'Todos'; // V46.3
 
@@ -285,6 +301,8 @@
         ingreso: ['🏫 Clases','⚡ Sinapsis','🏢 RentEngine','🏠 Aporte Diario Casa'].sort(),
         interno: ['🏠 Aporte Diario Casa','🛒 Diario Casa','🍳 Cocina','📦 Varios'].sort()
     };
+
+    function fDate(d) { if(!d) return ""; const [y,m,day] = d.split('-'); return `${day}-${m}-${y}`; } // V47.3
 
     sb.auth.onAuthStateChange((event, session) => { if(session){user=session.user; initUI();} else{document.getElementById('login-screen').classList.remove('hidden'); ['ui-header','ui-main','ui-nav'].forEach(x=>document.getElementById(x).classList.add('hidden'));} });
     async function handleLogin() { await sb.auth.signInWithPassword({ email: document.getElementById('log-email').value, password: document.getElementById('log-pass').value }); }
@@ -317,7 +335,9 @@
 
     function renderAll() {
         if (!txs) return;
-        const now = new Date(); const todayStr = now.toISOString().split('T')[0]; const curY = now.getFullYear();
+        const now = new Date(); 
+        const todayStr = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD local
+        const curY = now.getFullYear();
         const fV = document.getElementById('time-filter').value;
         let sF, eF = "2100-12-31";
         if (fV==='q-current') { const d = now.getDate(); if (d<=15) { sF=`${curY}-${String(now.getMonth()+1).padStart(2,'0')}-01`; eF=`${curY}-${String(now.getMonth()+1).padStart(2,'0')}-15`; } else { sF=`${curY}-${String(now.getMonth()+1).padStart(2,'0')}-16`; eF=new Date(curY, now.getMonth()+1, 0).toISOString().split('T')[0]; } }
@@ -330,6 +350,10 @@
 
         const tVar = txs.filter(t => t.date === todayStr && t.tipo === 'gastovariable' && t.categoria !== '💵 Pago a Lili por trabajo').reduce((s,t)=>s+Math.abs(t.monto),0);
         document.getElementById('ui-today-var').textContent = `S/ ${tVar.toLocaleString('en-US',{minimumFractionDigits:2})}`;
+        
+        // V47.0 Gastado Hoy Casa
+        const casaToday = txs.filter(t => t.date === todayStr && t.tipo === 'interno' && t.monto < 0).reduce((s,t)=>s+Math.abs(t.monto),0);
+        document.getElementById('ui-casa-today').textContent = `S/ ${casaToday.toLocaleString('en-US',{minimumFractionDigits:2})}`;
 
         const aD = txs.filter(t => t.date.startsWith(curY) && t.tipo !== 'interno');
         const aI = aD.filter(t => t.tipo === 'ingreso').reduce((s,t)=>s+Math.abs(t.monto),0);
@@ -361,11 +385,11 @@
             const iconStyle = isLili ? 'color:#DB2777;' : 'color:#64748B; opacity:0.7;';
             
             return `<tr>
-                <td>${t.date.slice(5)}</td>
+                <td>${fDate(t.date)}</td>
                 <td>${t.descripcion || t.categoria}</td>
                 <td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">${Math.abs(t.monto).toFixed(0)}</td>
                 <td style="text-align:center;">
-                    <span style="${iconStyle} font-size:1rem; margin-right:5px;">${icon}</span>
+                    <button class="btn-icon" style="font-size:0.8rem;" onclick="editGastoCasa('${t.id}')">✏️</button>
                     <button class="btn-icon" style="font-size:0.8rem;" onclick="deleteTx('${t.id}')">🗑️</button>
                 </td>
             </tr>`;
@@ -389,7 +413,27 @@
         const dV = Array(7).fill(0); const wD = []; for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); wD.push(d.toISOString().split('T')[0]); }
         txs.filter(t => t.tipo === 'gastovariable' && t.categoria !== '💵 Pago a Lili por trabajo').forEach(t => { const idx = wD.indexOf(t.date); if(idx!==-1) dV[idx] += Math.abs(t.monto); });
         try {
-            bChart = new Chart(ctxB, { type:'bar', data:{ labels:['L','M','M','J','V','S','D'], datasets:[{label:'S/',data:dV,backgroundColor:'#EF4444',borderRadius:4}] }, options:{responsive:true,maintainAspectRatio:false,onClick:(e,els)=>{ if(els[0]){ document.getElementById('h-search').value = wD[els[0].index]; nav('v-hist',document.querySelector('button[onclick*="v-hist"]')); renderH(); } }, onHover:(e,els)=>e.native.target.style.cursor=els[0]?'pointer':'default', plugins:{legend:{display:false}}}}); 
+            bChart = new Chart(ctxB, { 
+                type:'bar', 
+                plugins: [ChartDataLabels],
+                data:{ labels:['L','M','M','J','V','S','D'], datasets:[{label:'S/',data:dV,backgroundColor:'#EF4444',borderRadius:4}] }, 
+                options:{
+                    responsive:true,
+                    maintainAspectRatio:false,
+                    onClick:(e,els)=>{ if(els[0]){ document.getElementById('h-search').value = wD[els[0].index]; nav('v-hist',document.querySelector('button[onclick*="v-hist"]')); renderH(); } }, 
+                    onHover:(e,els)=>e.native.target.style.cursor=els[0]?'pointer':'default', 
+                    plugins:{
+                        legend:{display:false},
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (v) => v > 0 ? v.toFixed(0) : '',
+                            font: { weight: 'bold', size: 10 },
+                            color: '#000'
+                        }
+                    }
+                }
+            }); 
         } catch(e) { console.error("Error Weekly Chart:", e); }
 
         const ctxL = document.getElementById('chartLiliPro').getContext('2d'); if(lChart) lChart.destroy();
@@ -447,8 +491,21 @@
             const sEl = document.getElementById('in-subcat'); const sub = sEl ? sEl.value : "";
             if(!m) throw new Error("Monto inválido");
             const t = MASTER_CATS.ingreso.includes(c) ? 'ingreso' : (MASTER_CATS.gastofijo.includes(c) ? 'gastofijo' : 'gastovariable');
-            await sb.from('transactions').insert([{ monto: t === 'ingreso' ? m : -m, categoria: c, subcategoria: sub, tipo: t, cuenta_usuario_id: user.id, account: acc, date: f, descripcion: d }]);
-            if(c === "🛒 Diario Casa (alimentos, casa base)" && acc === "Isaac") await sb.from('transactions').insert([{ monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' }]);
+            
+            const payload = { monto: t === 'ingreso' ? m : -m, categoria: c, subcategoria: sub, tipo: t, cuenta_usuario_id: user.id, account: acc, date: f, descripcion: d };
+            
+            if(editingTxId) {
+                await sb.from('transactions').update(payload).eq('id', editingTxId);
+                editingTxId = null;
+                document.getElementById('load-title').textContent = "➕ AGREGAR MOVIMIENTO";
+                document.getElementById('btn-save-main').textContent = "SINCRONIZAR BÚNKER";
+            } else {
+                await sb.from('transactions').insert([payload]);
+                if(c === "🛒 Diario Casa (alimentos, casa base)" && acc === "Isaac") {
+                    await sb.from('transactions').insert([{ monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' }]);
+                }
+            }
+            
             await sync(); document.getElementById('in-monto').value = ""; document.getElementById('in-desc').value = ""; alert("Sincronizado");
         } catch (e) { alert(e.message); }
     }
@@ -457,7 +514,16 @@
         try {
             const m = parseFloat(document.getElementById('ca-monto').value); const d = document.getElementById('ca-desc').value; const f = document.getElementById('ca-fecha').value;
             if(!m) throw new Error("Monto vacío");
-            await sb.from('transactions').insert([{ monto: -m, descripcion: d, date: f, tipo: 'interno', categoria: currentCasaCat, account: 'Lili', cuenta_usuario_id: user.id }]);
+            
+            const payload = { monto: -m, descripcion: d, date: f, tipo: 'interno', categoria: currentCasaCat, account: 'Lili', cuenta_usuario_id: user.id };
+            
+            if(editingCasaId) {
+                await sb.from('transactions').update(payload).eq('id', editingCasaId);
+                editingCasaId = null;
+                document.getElementById('btn-save-casa').textContent = "REGISTRAR GASTO";
+            } else {
+                await sb.from('transactions').insert([payload]);
+            }
             
             // Reset V46.3 Form Selection
             currentCasaCat = 'Hogar';
@@ -465,7 +531,53 @@
             document.getElementById('btn-cat-hogar').classList.add('active');
 
             await sync(); document.getElementById('ca-monto').value = ""; document.getElementById('ca-desc').value = "";
+            document.getElementById('mirror-warning').classList.add('hidden');
         } catch (e) { alert(e.message); }
+    }
+
+    function checkMirror(val) {
+        const monto = parseFloat(val);
+        const fecha = document.getElementById('ca-fecha').value;
+        if(!monto || !fecha) return;
+        
+        const exists = txs.find(t => t.account === 'Isaac' && t.date === fecha && Math.abs(t.monto) === monto);
+        document.getElementById('mirror-warning').classList.toggle('hidden', !exists);
+    }
+
+    function editGastoCasa(id) {
+        const t = txs.find(x => x.id === id);
+        if(!t) return;
+        editingCasaId = id;
+        document.getElementById('ca-monto').value = Math.abs(t.monto);
+        document.getElementById('ca-fecha').value = t.date;
+        document.getElementById('ca-desc').value = t.descripcion || "";
+        
+        const cat = t.categoria === 'Lili Personal' ? 'Lili Personal' : 'Hogar';
+        setCasaCat(cat, document.getElementById(cat === 'Hogar' ? 'btn-cat-hogar' : 'btn-cat-lili'));
+        
+        document.getElementById('btn-save-casa').textContent = "ACTUALIZAR GASTO";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function editTx(id) {
+        const t = txs.find(x => x.id === id);
+        if(!t) return;
+        editingTxId = id;
+        
+        nav('v-load', document.querySelector('button[onclick*="v-load"]'));
+        
+        document.getElementById('in-monto').value = Math.abs(t.monto);
+        document.getElementById('in-fecha').value = t.date;
+        document.getElementById('in-desc').value = t.descripcion || "";
+        document.getElementById('in-acc').value = t.account;
+        
+        setT(t.tipo, document.getElementById(t.tipo === 'gastovariable' ? 'btn-t-var' : (t.tipo === 'gastofijo' ? 'btn-t-fix' : 'btn-t-ing')));
+        document.getElementById('in-cat').value = t.categoria;
+        updateSubCats();
+        if(t.subcategoria) document.getElementById('in-subcat').value = t.subcategoria;
+        
+        document.getElementById('load-title').textContent = "✏️ EDITAR MOVIMIENTO";
+        document.getElementById('btn-save-main').textContent = "ACTUALIZAR BÚNKER";
     }
 
     // V46.3 Helper Functions
@@ -686,8 +798,8 @@
         let d = txs.filter(x => (x.categoria.toLowerCase().includes(q) || x.date.includes(q) || (x.descripcion && x.descripcion.toLowerCase().includes(q))) && (t === 'all' || x.tipo === t)); 
         
         document.getElementById('h-body').innerHTML = d.slice(0,100).map(x => `
-            <tr onclick="showTxDetail('${x.id}')" style="cursor:pointer;">
-                <td style="font-size:0.6rem;">${x.date.slice(5)}</td>
+            <tr>
+                <td style="font-size:0.6rem;">${fDate(x.date)}</td>
                 <td style="font-size:0.6rem; font-weight:700;">${x.categoria}</td>
                 <td style="font-size:0.55rem; opacity:0.8;">${x.subcategoria || ''}</td>
                 <td style="font-size:0.55rem; opacity:0.8;">${x.descripcion || ''}</td>
@@ -695,7 +807,10 @@
                     ${Math.abs(x.monto).toFixed(0)}
                     <span style="display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:4px; background:${x.account==='Isaac'?'var(--accent)':'var(--lili)'};"></span>
                 </td>
-                <td style="text-align:center;"><button class="btn-icon" onclick="event.stopPropagation(); deleteTx('${x.id}')">🗑️</button></td>
+                <td style="text-align:center; display:flex; gap:4px; justify-content:center;">
+                    <button class="btn-icon" style="font-size:0.8rem;" onclick="editTx('${x.id}')">✏️</button>
+                    <button class="btn-icon" style="font-size:0.8rem;" onclick="deleteTx('${x.id}')">🗑️</button>
+                </td>
             </tr>`).join(''); 
     }
 
@@ -704,13 +819,62 @@
         if(!tx) return;
         alert(`DETALLE DE TRANSACCIÓN\n\n` +
               `💰 MONTO: S/ ${Math.abs(tx.monto).toFixed(2)}\n` +
-              `📅 FECHA: ${tx.date}\n` +
+              `📅 FECHA: ${fDate(tx.date)}\n` +
               `📁 CATEGORÍA: ${tx.categoria}\n` +
               `👤 CUENTA: ${tx.account}\n` +
               `📝 DESCRIPCIÓN: ${tx.descripcion || 'Sin descripción'}`);
     }
-    function renderBudgets(fT) { document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); return `<div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:10px;"><span>${b.categoria}</span><span>S/ ${g.toFixed(0)} / ${b.monto_quincenal}</span></div><div class="budget-bar"><div class="budget-fill" style="width:${Math.min((g/b.monto_quincenal)*100,100)}%; background:${g>b.monto_quincenal?'var(--danger)':'var(--accent)'}"></div></div>`; }).join(''); }
-    function nav(id, el) { document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); if(id==='v-reports') renderReports(); el.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' }); }
+    function renderBudgets(fT) { 
+        document.getElementById('budget-ui').innerHTML = dbBudgets.map(b => { 
+            const g = Math.abs(fT.filter(t => t.categoria === b.categoria).reduce((s,t)=>s+parseFloat(t.monto),0)); 
+            return `
+                <div style="font-size:0.65rem; font-weight:900; display:flex; justify-content:space-between; margin-top:15px; align-items:center;">
+                    <span>${b.categoria}</span>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <span style="opacity:0.7;">S/ ${g.toFixed(0)} / ${b.monto_quincenal}</span>
+                        <button onclick="editBudget('${b.id}')" style="background:none; border:none; cursor:pointer; font-size:1rem;">✏️</button>
+                        <button onclick="deleteBudget('${b.id}')" style="background:none; border:none; cursor:pointer; font-size:1rem;">🗑️</button>
+                    </div>
+                </div>
+                <div class="budget-bar">
+                    <div class="budget-fill" style="width:${Math.min((g/b.monto_quincenal)*100,100)}%; background:${g>b.monto_quincenal?'var(--danger)':'var(--accent)'}"></div>
+                </div>`; 
+        }).join(''); 
+    }
+
+    function editBudget(id) {
+        const b = dbBudgets.find(x => x.id === id);
+        if(!b) return;
+        editingBudgetId = id;
+        document.getElementById('b-cat').value = b.categoria;
+        document.getElementById('b-monto').value = b.monto_quincenal;
+        document.getElementById('v-budget').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function deleteBudget(id) {
+        if(confirm("¿Eliminar este presupuesto?")) {
+            await sb.from('budgets').delete().eq('id', id);
+            sync();
+        }
+    }
+    function nav(id, el) { 
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden')); 
+        document.getElementById(id).classList.remove('hidden'); 
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
+        el.classList.add('active'); 
+        
+        // V47.0 Fechas por defecto al abrir módulos
+        const today = new Date().toLocaleDateString('sv-SE');
+        if(id === 'v-casa' && !editingCasaId) {
+            document.getElementById('ca-fecha').value = today;
+        }
+        if(id === 'v-load' && !editingTxId) {
+            document.getElementById('in-fecha').value = today;
+        }
+
+        if(id==='v-reports') renderReports(); 
+        el.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' }); 
+    }
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
     function updateSubCats() { const cat = document.getElementById('in-cat').value; document.getElementById('subcat-wrap').classList.toggle('hidden', cat !== '💳 Tarjetas de crédito'); if(cat === '💳 Tarjetas de crédito') document.getElementById('subcat-container').innerHTML = `<select id="in-subcat" class="select">${debts.map(d=>`<option value="${d.banco_marca}">${d.banco_marca}</option>`).join('')}</select>`; }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
@@ -727,7 +891,35 @@
         document.getElementById('calc-res').textContent = `CUOTA EST: S/ ${cFinal.toFixed(2)}`; 
     }
     function importCSV() { alert("Simulando Importación..."); }
-    async function saveBudgetRemote() { const c = document.getElementById('b-cat').value, m = parseFloat(document.getElementById('b-monto').value); await sb.from('budgets').upsert({ categoria: c, monto_quincenal: m, usuario_id: user.id }, { onConflict: 'categoria' }); sync(); }
+    async function saveBudgetRemote() { 
+        try {
+            const c = document.getElementById('b-cat').value;
+            const m = parseFloat(document.getElementById('b-monto').value);
+            if(!m) throw new Error("Monto inválido");
+            
+            const payload = { categoria: c, monto_quincenal: m, usuario_id: user.id };
+            
+            // Lógica de Fuerza Bruta: Verificar existencia local para decidir entre Update o Insert
+            const existing = dbBudgets.find(b => b.categoria === c);
+            
+            let res;
+            if (existing) {
+                // Si existe, actualizamos usando el ID encontrado
+                res = await sb.from('budgets').update(payload).eq('id', existing.id);
+            } else {
+                // Si no existe, insertamos nuevo registro
+                res = await sb.from('budgets').insert([payload]);
+            }
+            
+            if(res.error) throw res.error;
+            
+            document.getElementById('b-monto').value = "";
+            alert("Presupuesto sincronizado correctamente");
+            sync(); 
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
 </script>
 </body>
 </html>
