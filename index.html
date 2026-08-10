@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SISTEMA ISALIFER V47.3 - Control de Errores y Edición Maestra</title>
+    <title>SISTEMA ISALIFER V47.3 - Formato DD-MM-YYYY y Smart Budget Logic</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -323,6 +323,9 @@
         sync(); 
     }
 
+    // V48.0 — sync() completo: solo se usa en la carga inicial (login/arranque).
+    // Baja todas las tablas una vez. Tras esto, los guardados usan actualización
+    // local optimista (ver applyLocal + funciones save*) para no refetchear las 844 filas.
     async function sync() {
         const { data: t } = await sb.from('transactions').select('*').order('date', {ascending:false});
         const { data: d } = await sb.from('debts').select('*');
@@ -330,6 +333,24 @@
         const { data: b } = await sb.from('budgets').select('*');
         const { data: cc } = await sb.from('card_consumptions').select('*');
         txs = t || []; debts = d || []; wishlist = w || []; dbBudgets = b || []; cardCons = cc || [];
+        renderAll();
+    }
+
+    // V48.0 — Actualización local optimista.
+    // Modifica el array en memoria (insert/update/delete) y re-renderiza SIN
+    // volver a bajar todo de Supabase. Mantiene 'txs' ordenado por fecha desc,
+    // igual que el .order('date', {ascending:false}) del sync original.
+    function applyLocal(arr, op, row, id) {
+        if (op === 'insert') {
+            arr.unshift(row);
+        } else if (op === 'update') {
+            const i = arr.findIndex(x => x.id === (id || row.id));
+            if (i !== -1) arr[i] = { ...arr[i], ...row };
+        } else if (op === 'delete') {
+            const i = arr.findIndex(x => x.id === id);
+            if (i !== -1) arr.splice(i, 1);
+        }
+        if (arr === txs) txs.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
         renderAll();
     }
 
@@ -495,18 +516,27 @@
             const payload = { monto: t === 'ingreso' ? m : -m, categoria: c, subcategoria: sub, tipo: t, cuenta_usuario_id: user.id, account: acc, date: f, descripcion: d };
             
             if(editingTxId) {
-                await sb.from('transactions').update(payload).eq('id', editingTxId);
+                const { error } = await sb.from('transactions').update(payload).eq('id', editingTxId);
+                if(error) throw error;
+                applyLocal(txs, 'update', payload, editingTxId); // V48.0 optimista
                 editingTxId = null;
                 document.getElementById('load-title').textContent = "➕ AGREGAR MOVIMIENTO";
                 document.getElementById('btn-save-main').textContent = "SINCRONIZAR BÚNKER";
             } else {
-                await sb.from('transactions').insert([payload]);
+                // .select() devuelve la fila insertada CON su id real, para el array local
+                const { data: ins, error } = await sb.from('transactions').insert([payload]).select();
+                if(error) throw error;
+                if(ins && ins[0]) applyLocal(txs, 'insert', ins[0]); // V48.0 optimista
                 if(c === "🛒 Diario Casa (alimentos, casa base)" && acc === "Isaac") {
-                    await sb.from('transactions').insert([{ monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' }]);
+                    const espejo = { monto: m, categoria: '🏠 Aporte Diario Casa', tipo: 'interno', account: 'Lili', date: f, cuenta_usuario_id: 'be2d0b6e-ddfa-4f67-913a-826b7f455d3a' };
+                    const { data: insE, error: errE } = await sb.from('transactions').insert([espejo]).select();
+                    if(errE) throw errE;
+                    if(insE && insE[0]) applyLocal(txs, 'insert', insE[0]); // espejo Lili
                 }
             }
-            
-            await sync(); document.getElementById('in-monto').value = ""; document.getElementById('in-desc').value = ""; alert("Sincronizado");
+
+            // V48.0 — Fix fecha: NO reseteamos in-fecha; se mantiene la fecha elegida.
+            document.getElementById('in-monto').value = ""; document.getElementById('in-desc').value = "";
         } catch (e) { alert(e.message); }
     }
 
@@ -518,11 +548,15 @@
             const payload = { monto: -m, descripcion: d, date: f, tipo: 'interno', categoria: currentCasaCat, account: 'Lili', cuenta_usuario_id: user.id };
             
             if(editingCasaId) {
-                await sb.from('transactions').update(payload).eq('id', editingCasaId);
+                const { error } = await sb.from('transactions').update(payload).eq('id', editingCasaId);
+                if(error) throw error;
+                applyLocal(txs, 'update', payload, editingCasaId); // V48.0 optimista
                 editingCasaId = null;
                 document.getElementById('btn-save-casa').textContent = "REGISTRAR GASTO";
             } else {
-                await sb.from('transactions').insert([payload]);
+                const { data: ins, error } = await sb.from('transactions').insert([payload]).select();
+                if(error) throw error;
+                if(ins && ins[0]) applyLocal(txs, 'insert', ins[0]); // V48.0 optimista
             }
             
             // Reset V46.3 Form Selection
@@ -530,7 +564,8 @@
             document.getElementById('btn-cat-hogar').parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-cat-hogar').classList.add('active');
 
-            await sync(); document.getElementById('ca-monto').value = ""; document.getElementById('ca-desc').value = "";
+            // V48.0 — Fix fecha: NO reseteamos ca-fecha; se mantiene la fecha elegida.
+            document.getElementById('ca-monto').value = ""; document.getElementById('ca-desc').value = "";
             document.getElementById('mirror-warning').classList.add('hidden');
         } catch (e) { alert(e.message); }
     }
@@ -612,19 +647,19 @@
             
             if(!data.banco_marca) throw new Error("Nombre del banco obligatorio");
             
-            let res;
             if(editingDebtId) {
-                res = await sb.from('debts').update(data).eq('id', editingDebtId);
+                const res = await sb.from('debts').update(data).eq('id', editingDebtId);
+                if(res.error) throw res.error;
+                applyLocal(debts, 'update', data, editingDebtId); // V48.0 optimista
                 editingDebtId = null;
                 document.getElementById('debt-btn').textContent = "VINCULAR CRÉDITO";
                 document.getElementById('debt-btn').style.background = "var(--danger)";
             } else {
-                res = await sb.from('debts').insert([data]);
+                const res = await sb.from('debts').insert([data]).select();
+                if(res.error) throw res.error;
+                if(res.data && res.data[0]) applyLocal(debts, 'insert', res.data[0]); // V48.0 optimista
             }
-            
-            if(res.error) throw res.error;
-            
-            await sync();
+
             // Reset form
             ['d-banco','d-tea','d-cuota','d-cierre','d-pago','d-total-cuotas','d-facturacion'].forEach(id => document.getElementById(id).value = "");
             alert("Operación exitosa");
@@ -638,7 +673,7 @@
         if(confirm("¿Estás seguro de eliminar esta deuda? Se borrará del Ranking y del Gantt.")) {
             const { error } = await sb.from('debts').delete().eq('id', id);
             if(error) alert(error.message);
-            else sync();
+            else applyLocal(debts, 'delete', null, id); // V48.0 optimista
         }
     }
 
@@ -675,9 +710,9 @@
                 cuenta_usuario_id: user.id
             };
             if(!data.monto || !data.concepto) throw new Error("Monto y concepto obligatorios");
-            const { error } = await sb.from('card_consumptions').insert([data]);
+            const { data: ins, error } = await sb.from('card_consumptions').insert([data]).select();
             if(error) throw error;
-            await sync(); 
+            if(ins && ins[0]) applyLocal(cardCons, 'insert', ins[0]); // V48.0 optimista
             ['cc-monto','cc-concepto','cc-tot-cuotas'].forEach(id => document.getElementById(id).value = "");
             alert("Consumo programado");
         } catch (e) { alert(e.message); }
@@ -709,9 +744,15 @@
         document.getElementById('cc-fecha-estimada').value = estimatedPayDate.toISOString().split('T')[0];
     }
 
-    async function savePriorityPurchase() { await sb.from('future_purchases').insert([{ item_nombre: document.getElementById('s-nombre').value, costo_estimado: parseFloat(document.getElementById('s-costo').value), prioridad: document.getElementById('s-prioridad').value, fecha_tentativa: document.getElementById('s-fecha').value, usuario_id: user.id }]); sync(); }
-    async function deleteTx(id) { if(confirm("¿Eliminar?")) { await sb.from('transactions').delete().eq('id', id); sync(); } }
-    async function deleteWish(id) { if(confirm("¿Eliminar?")) { await sb.from('future_purchases').delete().eq('id', id); sync(); } }
+    async function savePriorityPurchase() {
+        const payload = { item_nombre: document.getElementById('s-nombre').value, costo_estimado: parseFloat(document.getElementById('s-costo').value), prioridad: document.getElementById('s-prioridad').value, fecha_tentativa: document.getElementById('s-fecha').value, usuario_id: user.id };
+        const { data: ins, error } = await sb.from('future_purchases').insert([payload]).select();
+        if(error) { alert(error.message); return; }
+        if(ins && ins[0]) applyLocal(wishlist, 'insert', ins[0]); // V48.0 optimista
+        document.getElementById('s-nombre').value = ""; document.getElementById('s-costo').value = "";
+    }
+    async function deleteTx(id) { if(confirm("¿Eliminar?")) { const { error } = await sb.from('transactions').delete().eq('id', id); if(error){alert(error.message);return;} applyLocal(txs, 'delete', null, id); } }
+    async function deleteWish(id) { if(confirm("¿Eliminar?")) { const { error } = await sb.from('future_purchases').delete().eq('id', id); if(error){alert(error.message);return;} applyLocal(wishlist, 'delete', null, id); } }
 
     function renderD() { 
         document.getElementById('debt-ranking-ui').innerHTML = [...debts].sort((a,b)=>b.tea-a.tea).map(d => `
@@ -853,8 +894,9 @@
 
     async function deleteBudget(id) {
         if(confirm("¿Eliminar este presupuesto?")) {
-            await sb.from('budgets').delete().eq('id', id);
-            sync();
+            const { error } = await sb.from('budgets').delete().eq('id', id);
+            if(error){alert(error.message);return;}
+            applyLocal(dbBudgets, 'delete', null, id); // V48.0 optimista
         }
     }
     function nav(id, el) { 
@@ -901,21 +943,19 @@
             
             // Lógica de Fuerza Bruta: Verificar existencia local para decidir entre Update o Insert
             const existing = dbBudgets.find(b => b.categoria === c);
-            
-            let res;
+
             if (existing) {
-                // Si existe, actualizamos usando el ID encontrado
-                res = await sb.from('budgets').update(payload).eq('id', existing.id);
+                const res = await sb.from('budgets').update(payload).eq('id', existing.id);
+                if(res.error) throw res.error;
+                applyLocal(dbBudgets, 'update', payload, existing.id); // V48.0 optimista
             } else {
-                // Si no existe, insertamos nuevo registro
-                res = await sb.from('budgets').insert([payload]);
+                const res = await sb.from('budgets').insert([payload]).select();
+                if(res.error) throw res.error;
+                if(res.data && res.data[0]) applyLocal(dbBudgets, 'insert', res.data[0]); // V48.0 optimista
             }
-            
-            if(res.error) throw res.error;
-            
+
             document.getElementById('b-monto').value = "";
             alert("Presupuesto sincronizado correctamente");
-            sync(); 
         } catch (e) {
             alert("Error: " + e.message);
         }
@@ -923,6 +963,3 @@
 </script>
 </body>
 </html>
-
-
-
