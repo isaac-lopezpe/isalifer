@@ -58,7 +58,7 @@
         .btn-main { width: 100%; height: 3.5rem; border-radius: 16px; border: none; background: #000000; color: #ffffff !important; font-size: 0.9rem; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .btn-main:active { transform: scale(0.98); opacity: 0.9; }
         .input, .select { width: 100%; height: 3.5rem; border-radius: 12px; border: 2px solid #E2E8F0; padding: 0 1rem; font-size: 0.95rem; margin-bottom: 1.2rem; outline: none; background: #fff; }
-        .table-wrap { width: 100%; overflow-x: auto; border: 2.5px solid var(--border); border-radius: 16px; background: #fff; }
+        .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; overscroll-behavior-x: contain; border: 2.5px solid var(--border); border-radius: 16px; background: #fff; background-image: linear-gradient(to right, #fff 30%, rgba(255,255,255,0)), linear-gradient(to right, rgba(255,255,255,0), #fff 70%); background-position: left center, right center; background-repeat: no-repeat; background-size: 30px 100%, 30px 100%; background-attachment: local, local; }
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; min-width: 500px; }
         th { text-align: left; padding: 1rem 0.6rem; background: #F1F5F9; border-bottom: 2.5px solid var(--border); font-weight: 900; }
         td { padding: 0.8rem 0.6rem; border-bottom: 1px solid #F1F5F9; font-weight: 700; }
@@ -303,6 +303,8 @@
     };
 
     function fDate(d) { if(!d) return ""; const [y,m,day] = d.split('-'); return `${day}-${m}-${y}`; } // V47.3
+    // V48.1 — Formato de monto: separador de miles + 2 decimales (evita cortes/redondeos).
+    function fMoney(n) { return Math.abs(parseFloat(n)||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
     sb.auth.onAuthStateChange((event, session) => { if(session){user=session.user; initUI();} else{document.getElementById('login-screen').classList.remove('hidden'); ['ui-header','ui-main','ui-nav'].forEach(x=>document.getElementById(x).classList.add('hidden'));} });
     async function handleLogin() { await sb.auth.signInWithPassword({ email: document.getElementById('log-email').value, password: document.getElementById('log-pass').value }); }
@@ -408,7 +410,7 @@
             return `<tr>
                 <td>${fDate(t.date)}</td>
                 <td>${t.descripcion || t.categoria}</td>
-                <td style="text-align:right; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}">${Math.abs(t.monto).toFixed(0)}</td>
+                <td style="text-align:right; white-space:nowrap; color:${t.monto > 0 ? 'var(--emerald)':'var(--danger)'}" title="S/ ${fMoney(t.monto)}">${fMoney(t.monto)}</td>
                 <td style="text-align:center;">
                     <button class="btn-icon" style="font-size:0.8rem;" onclick="editGastoCasa('${t.id}')">✏️</button>
                     <button class="btn-icon" style="font-size:0.8rem;" onclick="deleteTx('${t.id}')">🗑️</button>
@@ -509,7 +511,7 @@
         try {
             const m = parseFloat(document.getElementById('in-monto').value); const c = document.getElementById('in-cat').value; const acc = document.getElementById('in-acc').value;
             const f = document.getElementById('in-fecha').value; const d = document.getElementById('in-desc').value;
-            const sEl = document.getElementById('in-subcat'); const sub = sEl ? sEl.value : "";
+            const sEl = document.getElementById('in-subcat'); const sub = (c === '💳 Tarjetas de crédito' && sEl) ? sEl.value : "";
             if(!m) throw new Error("Monto inválido");
             const t = MASTER_CATS.ingreso.includes(c) ? 'ingreso' : (MASTER_CATS.gastofijo.includes(c) ? 'gastofijo' : 'gastovariable');
             
@@ -844,8 +846,8 @@
                 <td style="font-size:0.6rem; font-weight:700;">${x.categoria}</td>
                 <td style="font-size:0.55rem; opacity:0.8;">${x.subcategoria || ''}</td>
                 <td style="font-size:0.55rem; opacity:0.8;">${x.descripcion || ''}</td>
-                <td style="text-align:right; font-weight:900; font-size:0.75rem;">
-                    ${Math.abs(x.monto).toFixed(0)}
+                <td style="text-align:right; font-weight:900; font-size:0.75rem; white-space:nowrap;" title="S/ ${fMoney(x.monto)}">
+                    ${fMoney(x.monto)}
                     <span style="display:inline-block; width:6px; height:6px; border-radius:50%; margin-left:4px; background:${x.account==='Isaac'?'var(--accent)':'var(--lili)'};"></span>
                 </td>
                 <td style="text-align:center; display:flex; gap:4px; justify-content:center;">
@@ -918,7 +920,7 @@
         el.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' }); 
     }
     function setT(t, el) { document.getElementById('in-cat').innerHTML = MASTER_CATS[t].map(cn => `<option>${cn}</option>`).join(''); updateSubCats(); if(el) { el.parentElement.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); el.classList.add('active'); } }
-    function updateSubCats() { const cat = document.getElementById('in-cat').value; document.getElementById('subcat-wrap').classList.toggle('hidden', cat !== '💳 Tarjetas de crédito'); if(cat === '💳 Tarjetas de crédito') document.getElementById('subcat-container').innerHTML = `<select id="in-subcat" class="select">${debts.map(d=>`<option value="${d.banco_marca}">${d.banco_marca}</option>`).join('')}</select>`; }
+    function updateSubCats() { const cat = document.getElementById('in-cat').value; const isTC = cat === '💳 Tarjetas de crédito'; document.getElementById('subcat-wrap').classList.toggle('hidden', !isTC); if(isTC) { document.getElementById('subcat-container').innerHTML = `<select id="in-subcat" class="select">${debts.map(d=>`<option value="${d.banco_marca}">${d.banco_marca}</option>`).join('')}</select>`; } else { document.getElementById('subcat-container').innerHTML = ""; } }
     function toggleSidebar() { document.getElementById('sb').classList.toggle('open'); }
     function runTacticalCalc() { 
         const m = parseFloat(document.getElementById('calc-monto').value); 
